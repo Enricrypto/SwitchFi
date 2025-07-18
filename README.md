@@ -1,36 +1,6 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
-
-## Getting Started
-
-First, run the development server:
-
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+<img width="471" height="726" alt="Screenshot 2025-07-18 at 21 35 18" src="https://github.com/user-attachments/assets/7634c4aa-ecba-4ebb-8cab-1ea945b82b52" />
+<img width="471" height="728" alt="Screenshot 2025-07-18 at 21 35 30" src="https://github.com/user-attachments/assets/4d69d7eb-c945-4187-8d63-cd48684a47e9" />
+<img width="472" height="726" alt="Screenshot 2025-07-18 at 21 35 44" src="https://github.com/user-attachments/assets/37b0775e-37d5-41e7-a32f-fc3ba12570b8" />
+<img width="528" height="814" alt="Screenshot 2025-07-17 at 16 16 07" src="https://github.com/user-attachments/assets/bf985ede-328d-434b-98cf-9efa8eab806e" />
+<img width="528" height="820" alt="Screenshot 2025-07-17 at 16 16 18" src="https://github.com/user-attachments/assets/d2272e67-fcc4-4c7e-8e2b-48bb49a60fdf" />
+<img width="963" height="559" alt="Screenshot 2025-06-18 at 16 17 44" src="https://github.com/user-attachments/assets/1568b5c3-ba1e-4ce5-9400-bb4240c81a84" />
