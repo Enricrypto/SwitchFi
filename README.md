@@ -1,6 +1,3 @@
-Here’s your README with a **Table of Contents** and some common GitHub badges you can customize later (like license and build status). I also added placeholders for screenshots if you want to include visuals.
-
-````markdown
 # Uniswap V2 Model
 
 ![Build Status](https://img.shields.io/badge/build-passing-brightgreen)
