@@ -21,6 +21,7 @@ export interface Pool {
   symbolToken1?: string;
   lpTotalSupply?: bigint;
   lpDecimals?: number;
+  isUserPool?: boolean;
 }
 
 export interface CreatePoolPageState {
@@ -52,6 +53,10 @@ export interface RemoveLiquidityModalProps {
   symbolToken1: string | undefined;
   lpDecimals: number | undefined;
   balanceLP: bigint | undefined;
+  reserves: [bigint, bigint];
+  lpTotalSupply: bigint | undefined;
+  decimals0: number | undefined;
+  decimals1: number | undefined;
 }
 
 export interface AddLiquidityModalProps {
@@ -64,16 +69,27 @@ export interface AddLiquidityModalProps {
   token1: `0x${string}`;
   decimalsToken0: number | null;
   decimalsToken1: number | null;
+  reserveA: bigint;
+  reserveB: bigint;
+  symbolToken0: string | undefined;
+  symbolToken1: string | undefined;
 }
 
 export interface PoolListProps {
   pools: Pool[]; // add the pools array here
+  isLoading: boolean;
   onAddLiquidityClick: (pairAddress: `0x${string}`) => void;
   onRemoveLiquidityClick: (pairAddress: `0x${string}`) => void;
-  userSharePct: number;
 }
 
 export interface PairData extends Pool {
   onAddLiquidityClick: (pair: `0x${string}`) => void;
   onRemoveLiquidityClick: (pair: `0x${string}`) => void;
+}
+
+export interface PoolListContainerProps {
+  pools: Pool[];
+  isLoading?: boolean;
+  ListComponent: React.ComponentType<PoolListProps & { isLoading: boolean }>;
+  fetchOnMount?: boolean;
 }

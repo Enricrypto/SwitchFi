@@ -1,3 +1,5 @@
+'use client';
+
 import { useRouter } from 'next/navigation';
 import { formatUnits } from 'viem';
 import { tokenList } from '@/constants';
@@ -12,12 +14,14 @@ const PairAddress = ({
   token1,
   decimals0,
   decimals1,
+  lpDecimals,
   reserves,
   userSharePct,
-  symbolToken0,
-  symbolToken1,
   onAddLiquidityClick,
   onRemoveLiquidityClick,
+  isUserPool,
+  balanceLP,
+  lpTotalSupply,
 }: PairData) => {
   const router = useRouter();
 
@@ -31,6 +35,16 @@ const PairAddress = ({
     reserves && decimals1 !== undefined
       ? formatUnits(reserves[1], decimals1)
       : '0';
+
+  const decimals = lpDecimals ?? 18;
+
+  const formattedLpTotalSupply = lpTotalSupply
+    ? Number(formatUnits(lpTotalSupply, decimals)).toLocaleString()
+    : null;
+
+  const formattedBalanceLP = balanceLP
+    ? Number(formatUnits(balanceLP, decimals)).toLocaleString()
+    : null;
 
   /** ------------------ Look up token metadata from local token list ------------------ */
   const token0Info = tokenList.find(
@@ -110,6 +124,36 @@ const PairAddress = ({
             <p className="text-white/60">Loading reserves...</p>
           )}
         </div>
+
+        <div className="text-center mt-4">
+          <p className="text-sm text-purple-300">
+            Total LP Supply:{' '}
+            {formattedLpTotalSupply !== null ? (
+              formattedLpTotalSupply
+            ) : (
+              <span className="text-gray-400 italic">
+                No liquidity in this pool
+              </span>
+            )}
+          </p>
+        </div>
+
+        {isUserPool && userSharePct != null && formattedBalanceLP && (
+          <div className="text-center mt-4">
+            <p className="text-sm text-purple-300">
+              Your Share:{' '}
+              <span className="font-semibold">
+                {Number(userSharePct) < 0.01
+                  ? '< 0.01%'
+                  : `${Number(userSharePct).toFixed(2)}%`}
+              </span>
+            </p>
+            <p className="text-sm text-purple-300">
+              LP Balance: {''}
+              <span>{formattedBalanceLP}</span>
+            </p>
+          </div>
+        )}
 
         {/* ------------------ Action Buttons ------------------ */}
         <div className="flex flex-col sm:flex-row gap-4 mt-6 justify-center">

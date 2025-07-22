@@ -11,6 +11,7 @@ import {
 import { ERC20Abi } from '@/constants';
 import { useAccount, useReadContract } from 'wagmi';
 import { formatUnits } from 'viem/utils';
+import { quote } from '../../utils/liquidityCalculations';
 import { AddLiquidityModalProps } from '../../types/interfaces';
 import Spinner from '../ui/Spinner';
 import { PlusCircle } from 'lucide-react';
@@ -25,6 +26,10 @@ const AddLiquidityModal = ({
   token1,
   decimalsToken0,
   decimalsToken1,
+  reserveA,
+  reserveB,
+  symbolToken0,
+  symbolToken1,
 }: AddLiquidityModalProps) => {
   const { address: userAddress } = useAccount();
 
@@ -33,20 +38,7 @@ const AddLiquidityModal = ({
   const [amountA, setAmountA] = useState('');
   const [amountB, setAmountB] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  /** ----------------------- Read Token Symbols ----------------------- */
-
-  const { data: tokenASymbol } = useReadContract({
-    address: token0,
-    abi: ERC20Abi,
-    functionName: 'symbol',
-  });
-
-  const { data: tokenBSymbol } = useReadContract({
-    address: token1,
-    abi: ERC20Abi,
-    functionName: 'symbol',
-  });
+  const [activeInput, setActiveInput] = useState<'A' | 'B' | null>(null);
 
   /** ----------------------- Read User Balances ----------------------- */
 
@@ -63,6 +55,107 @@ const AddLiquidityModal = ({
     functionName: 'balanceOf',
     args: [userAddress as `0x${string}`],
   });
+
+  const handleAmountAChange = (value: string) => {
+    setActiveInput('A');
+    setAmountA(value);
+
+    // Reset liquidity warning on input
+    if (liquidityWarning) setLiquidityWarning(null);
+
+    // Early exit if value is empty or non-positive
+    const numericValue = parseFloat(value);
+    if (!value || isNaN(numericValue) || numericValue <= 0) {
+      setAmountB('');
+      return;
+    }
+
+    // Ensure required values exist
+    if (
+      decimalsToken0 != null &&
+      decimalsToken1 != null &&
+      reserveA > BigInt(0) &&
+      reserveB > BigInt(0)
+    ) {
+      try {
+        const amountADesired = BigInt(
+          (numericValue * 10 ** decimalsToken0).toFixed(0)
+        );
+
+        const amountBOptimal = quote(amountADesired, reserveA, reserveB);
+
+        // If result is zero, something is wrong
+        if (amountBOptimal === BigInt(0)) {
+          setLiquidityWarning('Insufficient liquidity for this amount.');
+          setAmountB('');
+          return;
+        }
+
+        const formattedAmountB = (
+          Number(amountBOptimal) /
+          10 ** decimalsToken1
+        ).toLocaleString();
+
+        setAmountB(formattedAmountB);
+      } catch (error) {
+        console.error('Error calculating optimal amountB:', error);
+        setAmountB('');
+        setLiquidityWarning('Invalid amount or calculation error.');
+      }
+    } else {
+      // No reserves — assume new pool or zero liquidity
+      setAmountB('');
+    }
+  };
+
+  const handleAmountBChange = (value: string) => {
+    setActiveInput('B');
+    setAmountB(value);
+
+    // Reset warning if it was previously shown
+    if (liquidityWarning) setLiquidityWarning(null);
+
+    const numericValue = parseFloat(value);
+    if (!value || isNaN(numericValue) || numericValue <= 0) {
+      setAmountA('');
+      return;
+    }
+
+    if (
+      decimalsToken0 != null &&
+      decimalsToken1 != null &&
+      reserveA > BigInt(0) &&
+      reserveB > BigInt(0)
+    ) {
+      try {
+        const amountBDesired = BigInt(
+          (numericValue * 10 ** decimalsToken1).toFixed(0)
+        );
+
+        const amountAOptimal = quote(amountBDesired, reserveB, reserveA); // flipped reserves
+
+        if (amountAOptimal === BigInt(0)) {
+          setLiquidityWarning('Insufficient liquidity for this amount.');
+          setAmountA('');
+          return;
+        }
+
+        const formattedAmountA = (
+          Number(amountAOptimal) /
+          10 ** decimalsToken0
+        ).toLocaleString();
+
+        setAmountA(formattedAmountA);
+      } catch (error) {
+        console.error('Error calculating optimal amountA:', error);
+        setAmountA('');
+        setLiquidityWarning('Invalid amount or calculation error.');
+      }
+    } else {
+      // No liquidity — blank the opposite input
+      setAmountA('');
+    }
+  };
 
   /** ----------------------- Format Balances for Display ----------------------- */
 
@@ -146,7 +239,7 @@ const AddLiquidityModal = ({
                   <div>
                     <div className="flex justify-between items-center mb-1">
                       <label htmlFor="amountA" className="text-sm font-medium">
-                        Amount {tokenASymbol}
+                        Amount {symbolToken0}
                       </label>
                       <div className="text-xs text-yellow-400">
                         Balance: {formattedTokenABalance}{' '}
@@ -172,11 +265,8 @@ const AddLiquidityModal = ({
                           : 'border-gray-700 focus:border-purple-500 focus:ring-purple-500'
                       }`}
                       value={amountA}
-                      onChange={(e) => {
-                        setAmountA(e.target.value);
-                        if (liquidityWarning) setLiquidityWarning(null);
-                      }}
-                      placeholder={`Enter amount of ${tokenASymbol}`}
+                      onChange={(e) => handleAmountAChange(e.target.value)}
+                      placeholder={`Enter amount of ${symbolToken0}`}
                     />
                     {amountA !== '' && isAmountAInvalid && !exceedsBalanceA && (
                       <p className="text-xs text-red-500 mt-1">
@@ -194,7 +284,7 @@ const AddLiquidityModal = ({
                   <div>
                     <div className="flex justify-between items-center mb-1">
                       <label htmlFor="amountB" className="text-sm font-medium">
-                        Amount {tokenBSymbol}
+                        Amount {symbolToken1}
                       </label>
                       <div className="text-xs text-yellow-400">
                         Balance: {formattedTokenBBalance}{' '}
@@ -220,11 +310,8 @@ const AddLiquidityModal = ({
                           : 'border-gray-700 focus:border-purple-500 focus:ring-purple-500'
                       }`}
                       value={amountB}
-                      onChange={(e) => {
-                        setAmountB(e.target.value);
-                        if (liquidityWarning) setLiquidityWarning(null);
-                      }}
-                      placeholder={`Enter amount of ${tokenBSymbol}`}
+                      onChange={(e) => handleAmountBChange(e.target.value)}
+                      placeholder={`Enter amount of ${symbolToken1}`}
                     />
                     {amountB !== '' && isAmountBInvalid && !exceedsBalanceB && (
                       <p className="text-xs text-red-500 mt-1">
