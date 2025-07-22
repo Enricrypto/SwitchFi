@@ -1,6 +1,6 @@
 'use client';
 
-import { Fragment, useState } from 'react';
+import { Fragment, useState, useMemo } from 'react';
 import {
   Dialog,
   DialogPanel,
@@ -8,7 +8,7 @@ import {
   Transition,
   TransitionChild,
 } from '@headlessui/react';
-import { formatUnits } from 'viem';
+import { formatUnits, parseUnits } from 'viem';
 import { RemoveLiquidityModalProps } from '../../types/interfaces';
 
 const RemoveLiquidityModal = ({
@@ -19,6 +19,10 @@ const RemoveLiquidityModal = ({
   symbolToken1,
   lpDecimals,
   balanceLP,
+  reserves,
+  lpTotalSupply,
+  decimals0,
+  decimals1,
 }: RemoveLiquidityModalProps) => {
   /** ----------------------- State ----------------------- */
 
@@ -47,6 +51,40 @@ const RemoveLiquidityModal = ({
   } else if (exceedsLPBalance) {
     validationError = 'Amount exceeds your LP token balance.';
   }
+
+  const [expectedAmount0, expectedAmount1] = useMemo(() => {
+    if (
+      !liquidityAmount ||
+      !lpTotalSupply ||
+      isNaN(Number(liquidityAmount)) ||
+      Number(liquidityAmount) <= 0 ||
+      lpTotalSupply === BigInt(0)
+    ) {
+      return [null, null];
+    }
+
+    try {
+      const liquidityBN = parseUnits(liquidityAmount, lpDecimals ?? 18);
+
+      const amount0 = (reserves[0] * liquidityBN) / lpTotalSupply;
+      const amount1 = (reserves[1] * liquidityBN) / lpTotalSupply;
+
+      return [
+        formatUnits(amount0, decimals0 ?? 18),
+        formatUnits(amount1, decimals1 ?? 18),
+      ];
+    } catch (err) {
+      console.error('Error computing expected token amounts:', err);
+      return [null, null];
+    }
+  }, [
+    liquidityAmount,
+    reserves,
+    lpTotalSupply,
+    lpDecimals,
+    decimals0,
+    decimals1,
+  ]);
 
   /** ----------------------- Handle Remove Liquidity Submit ----------------------- */
 
@@ -77,6 +115,7 @@ const RemoveLiquidityModal = ({
     <Transition show={isOpen} as={Fragment}>
       <Dialog as="div" className="relative z-50" onClose={onClose}>
         {/* Backdrop transition */}
+
         <TransitionChild
           as={Fragment}
           enter="ease-out duration-300"
@@ -165,6 +204,21 @@ const RemoveLiquidityModal = ({
                     <div className="text-red-400 text-sm mt-1">{error}</div>
                   )}
                 </div>
+
+                {expectedAmount0 && expectedAmount1 && (
+                  <div className="mt-3">
+                    <p className="text-gray-400">Estimated received:</p>
+                    <ul className="mt-1 ml-4 list-disc text-sm text-purple-300">
+                      <li>
+                        {expectedAmount0} {symbolToken0}
+                        {' tokens'}
+                      </li>
+                      <li>
+                        {expectedAmount1} {symbolToken1} {' tokens'}
+                      </li>
+                    </ul>
+                  </div>
+                )}
 
                 {/* Action buttons: Cancel and Remove Liquidity */}
                 <div className="mt-6 flex justify-end space-x-3">

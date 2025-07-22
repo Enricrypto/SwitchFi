@@ -148,6 +148,7 @@ export const usePoolsStore = create<PoolsState>((set, get) => ({
 
   fetchUserPools: async (userAddress, publicClient) => {
     set({ isLoadingUserPools: true, errorUserPools: undefined });
+    console.log('Fetching user pools for:', userAddress);
 
     try {
       let allPools = get().allPools;
@@ -221,10 +222,6 @@ export const usePoolsStore = create<PoolsState>((set, get) => ({
 
           const pct = Number(share) / 10_000;
 
-          console.log('  User LP Balance:', balanceLP.toString());
-          console.log('  Total LP Supply:', totalSupply.toString());
-          console.log('  Calculated Share %:', pct);
-
           userPools.push({
             ...pool,
             balanceLP: balanceLP as bigint,
@@ -244,7 +241,7 @@ export const usePoolsStore = create<PoolsState>((set, get) => ({
           continue;
         }
       }
-
+      console.log('Fetched user pools:', userPools);
       set({ userPools, isLoadingUserPools: false });
     } catch (err) {
       console.error('Error fetching user pools:', err);
