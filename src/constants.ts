@@ -9,7 +9,7 @@ export const MAX_UINT256 = BigInt(
   '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'
 );
 
-export const tokenList: Token[] = [
+export const customTokens: Token[] = [
   { symbol: 'TKNA', address: '0x3bCFE4F6f3b11c8dB62f8302dc53f5CCdb51F9c3' },
   { symbol: 'TKNB', address: '0x7FC70540Ab332e9Fa74E6808352df88Ffd2Bfe36' },
   { symbol: 'TKNC', address: '0x02dC7cA9865cDbE9D2930A9D50A79fe31BB4377E' },
@@ -17,6 +17,15 @@ export const tokenList: Token[] = [
   { symbol: 'TKNE', address: '0x42B3e33dA3E34d3fbbbF09aA745A6aE25320B80A' },
   { symbol: 'TKNF', address: '0x9Ec31CbE866596c1E7498C610ca63AB795957685' },
 ];
+
+export const knownTokensToWatch: Token[] = [
+  { symbol: 'WETH', address: '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1' }, // WETH
+  { symbol: 'USDC', address: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831' }, // USDC
+  { symbol: 'ARB', address: '0x912CE59144191C1204E64559FE8253a0e49E6548' }, // ARB
+];
+
+// Merge both:
+export const tokenList: Token[] = [...customTokens, ...knownTokensToWatch];
 
 export const factoryABI = [
   {

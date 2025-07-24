@@ -21,17 +21,16 @@ export function calculateOptimalAmounts(
   if (reserveA === BigInt(0) && reserveB === BigInt(0)) {
     return [amountADesired, amountBDesired];
   }
+
   const amountBOptimal = quote(amountADesired, reserveA, reserveB);
   if (amountBOptimal <= amountBDesired) {
-    if (amountBOptimal < amountBMin) {
-      return null;
-    }
-    return [amountADesired, amountBOptimal];
-  } else {
-    const amountAOptimal = quote(amountBDesired, reserveB, reserveA);
-    if (amountAOptimal > amountADesired || amountAOptimal < amountAMin) {
-      return null;
-    }
-    return [amountAOptimal, amountBDesired];
+    return amountBOptimal >= amountBMin
+      ? [amountADesired, amountBOptimal]
+      : null;
   }
+
+  const amountAOptimal = quote(amountBDesired, reserveB, reserveA);
+  return amountAOptimal <= amountADesired && amountAOptimal >= amountAMin
+    ? [amountAOptimal, amountBDesired]
+    : null;
 }

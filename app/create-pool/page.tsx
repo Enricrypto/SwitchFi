@@ -85,6 +85,7 @@ const CreatePoolPage = () => {
   }, [poolAddress]);
 
   /** ------------------ Refetch Pool Address After Confirmation ------------------ */
+  // After transaction confirmed, re-query pool address to get updated state
   useEffect(() => {
     if (isConfirmed) {
       refetchPoolAddress();
@@ -93,6 +94,7 @@ const CreatePoolPage = () => {
 
   /** ------------------ Show Success Toast and Redirect After Creation ------------------ */
   useEffect(() => {
+    // Show success toast and navigate to new pool page after confirmation
     if (isConfirmed && poolAddress && poolAddress !== zeroAddress) {
       toast.success('Pool created successfully!');
       router.push(`/pool/${poolAddress}`);
@@ -105,6 +107,7 @@ const CreatePoolPage = () => {
 
     const message = error instanceof Error ? error.message.toLowerCase() : '';
 
+    // Show different error messages based on error type/content
     if (
       message.includes('user denied') ||
       message.includes('cancel') ||
@@ -122,6 +125,7 @@ const CreatePoolPage = () => {
   }, [error]);
 
   /** ------------------ Clear Errors When Tokens Change ------------------ */
+  // Reset local error state when user selects new tokens
   useEffect(() => {
     setLocalError(null);
   }, [tokenA, tokenB]);

@@ -17,6 +17,7 @@ import {
   ERC20Abi,
   MAX_UINT256,
 } from '@/constants';
+import { getMockPrice } from '../../utils/getMockPrice';
 import { PoolListContainerProps } from '../../types/interfaces';
 
 const PoolListContainer = ({
@@ -27,9 +28,11 @@ const PoolListContainer = ({
 }: PoolListContainerProps) => {
   const { writeContractAsync } = useWriteContract();
 
+  // Access pool-related state and actions from the global store
   const fetchAllPools = usePoolsStore((state) => state.fetchAllPools);
   const fetchUserPools = usePoolsStore((state) => state.fetchUserPools);
   const isLoadingAllPools = usePoolsStore((state) => state.isLoadingAllPools);
+  const allPools = usePoolsStore((state) => state.allPools);
   const userPools = usePoolsStore((state) => state.userPools);
 
   const { address: userAddress, isConnected } = useAccount();
@@ -40,8 +43,16 @@ const PoolListContainer = ({
   const [isRemoveModalOpen, setIsRemoveModalOpen] = useState(false);
   const [liquidityWarning, setLiquidityWarning] = useState<string | null>(null);
 
-  const selectedPool = pools.find((p) => p.pairAddress === selectedPair);
+  // Get the currently selected pool from userPools or allPools
+  const selectedPool =
+    userPools.find(
+      (p) => p.pairAddress.toLowerCase() === selectedPair?.toLowerCase()
+    ) ||
+    allPools.find(
+      (p) => p.pairAddress.toLowerCase() === selectedPair?.toLowerCase()
+    );
 
+  // Fetch pools when component mounts, user connects, and fetchOnMount flag is true
   useEffect(() => {
     if (!fetchOnMount) return;
     if (!publicClient || !isConnected || !userAddress) return;
@@ -68,48 +79,86 @@ const PoolListContainer = ({
     if (!publicClient) return false;
     if (!selectedPair) return false;
 
-    const selectedPool = userPools.find(
-      (p) => p.pairAddress.toLowerCase() === selectedPair?.toLowerCase()
-    );
-
     if (!selectedPool) {
       console.error('No selected pool found');
       return false;
     }
 
-    const {
-      token0,
-      token1,
-      decimals0,
-      decimals1,
-      reserves,
-      allowanceToken0,
-      allowanceToken1,
-    } = selectedPool;
-    if (
-      decimals0 === null ||
-      decimals1 === null ||
-      token0 === null ||
-      token1 === null ||
-      reserves === null
-    ) {
-      console.error('Token decimals or reserves not loaded yet');
-      return false;
-    }
-
     try {
-      const parsedAmount0 = parseUnits(amountToken0Desired, decimals0);
-      const parsedAmount1 = parseUnits(amountToken1Desired, decimals1);
+      const {
+        token0,
+        token1,
+        decimals0,
+        decimals1,
+        reserves,
+        allowanceToken0,
+        allowanceToken1,
+        symbolToken0,
+        symbolToken1,
+      } = selectedPool;
 
-      const amount0Min = getSlippageBounds(parsedAmount0);
-      const amount1Min = getSlippageBounds(parsedAmount1);
+      if (
+        decimals0 === null ||
+        decimals1 === null ||
+        token0 === null ||
+        token1 === null ||
+        reserves === null ||
+        symbolToken0 === undefined ||
+        symbolToken1 === undefined
+      ) {
+        console.error('Token decimals, reserves or allowances not loaded yet');
+        return false;
+      }
 
-      // Validate the ratio is balanced
+      // Fetch current token allowances if not already available
+      const finalAllowance0 =
+        allowanceToken0 ??
+        (await publicClient.readContract({
+          address: token0,
+          abi: ERC20Abi,
+          functionName: 'allowance',
+          args: [userAddress, routerAddress],
+        }));
+
+      const finalAllowance1 =
+        allowanceToken1 ??
+        (await publicClient.readContract({
+          address: token1,
+          abi: ERC20Abi,
+          functionName: 'allowance',
+          args: [userAddress, routerAddress],
+        }));
+
+      // Parse user inputs and validate
+      const hasInput0 = amountToken0Desired.trim() !== '';
+      const hasInput1 = amountToken1Desired.trim() !== '';
+
+      if (!hasInput0 && !hasInput1) {
+        console.error('At least one token input is required');
+        return false;
+      }
+
+      const inputAmount0 = hasInput0 ? parseFloat(amountToken0Desired) : 0;
+      const inputAmount1 = hasInput1 ? parseFloat(amountToken1Desired) : 0;
+
+      if (
+        (hasInput0 && (isNaN(inputAmount0) || inputAmount0 <= 0)) ||
+        (hasInput1 && (isNaN(inputAmount1) || inputAmount1 <= 0))
+      ) {
+        console.error('Invalid token input');
+        return false;
+      }
+
+      // Convert input amounts to raw units based on decimals
+      const parsedAmount0 = parseUnits(inputAmount0.toString(), decimals0);
+      const parsedAmount1 = parseUnits(inputAmount1.toString(), decimals1);
+
+      // Validate amounts against pool reserves to maintain ratio
       const optimalAmounts = validateOptimalAmounts(
         parsedAmount0,
         parsedAmount1,
-        amount0Min,
-        amount1Min,
+        getSlippageBounds(parsedAmount0),
+        getSlippageBounds(parsedAmount1),
         reserves[0],
         reserves[1]
       );
@@ -121,32 +170,31 @@ const PoolListContainer = ({
         return false;
       }
 
-      const [optimal0, optimal1] = optimalAmounts;
-      if (optimal0 !== parsedAmount0 || optimal1 !== parsedAmount1) {
-        setLiquidityWarning(
-          'The token amounts you entered are not in the correct ratio. Please adjust them to match the pool balance.'
-        );
-        return false;
-      }
       setLiquidityWarning(null);
 
-      // Approve tokens if needed
+      const [finalParsed0, finalParsed1] = optimalAmounts;
+
+      // Calculate minimum amounts considering slippage tolerance
+      const amount0Min = getSlippageBounds(finalParsed0);
+      const amount1Min = getSlippageBounds(finalParsed1);
+
+      // Approve tokens for router if allowance is insufficient
       await approveIfNeeded(
         token0,
-        allowanceToken0!,
-        parsedAmount0,
+        finalAllowance0,
+        finalParsed0,
         writeContractAsync,
         routerAddress
       );
       await approveIfNeeded(
         token1,
-        allowanceToken1!,
-        parsedAmount1,
+        finalAllowance1,
+        finalParsed1,
         writeContractAsync,
         routerAddress
       );
 
-      // Add liquidity on-chain
+      // Execute addLiquidity on-chain
       const txHash = await writeContractAsync({
         address: routerAddress,
         abi: routerABI,
@@ -154,18 +202,18 @@ const PoolListContainer = ({
         args: [
           token0,
           token1,
-          parsedAmount0,
-          parsedAmount1,
+          finalParsed0,
+          finalParsed1,
           amount0Min,
           amount1Min,
           userAddress,
         ],
       });
 
-      // 2. Wait for tx confirmation
+      // Wait for transaction confirmation
       await publicClient.waitForTransactionReceipt({ hash: txHash });
 
-      // 3. Refetch pools after tx confirmation
+      // Refresh pool data after adding liquidity
       await fetchAllPools(publicClient);
       await fetchUserPools(userAddress, publicClient);
 
@@ -182,8 +230,6 @@ const PoolListContainer = ({
   ): Promise<boolean> => {
     if (!publicClient) return false;
     if (!selectedPair) return false;
-
-    const selectedPool = userPools.find((p) => p.pairAddress === selectedPair);
     if (!selectedPool) return false;
 
     const {
@@ -211,13 +257,13 @@ const PoolListContainer = ({
     }
 
     try {
-      // 1. Fetch LP decimals
+      // Determine decimals for LP tokens
       const decimalsLP = lpDecimals ?? 18;
 
-      // 2. Parse input liquidity amount
+      // Parse input liquidity amount to raw units
       const parsedLiquidityAmount = parseUnits(liquidityAmount, decimalsLP);
 
-      // 3. Check LP token balance
+      // Ensure user has enough LP tokens
       if (balanceLP === undefined) {
         console.error('LP balance not loaded yet');
         return false;
@@ -227,18 +273,18 @@ const PoolListContainer = ({
         return false;
       }
 
-      // 4. Calculate expected withdrawal amounts
+      // Calculate expected token amounts to be withdrawn from pool
       const [reserve0, reserve1] = reserves;
       const expectedAmount0 =
         (reserve0 * parsedLiquidityAmount) / lpTotalSupply;
       const expectedAmount1 =
         (reserve1 * parsedLiquidityAmount) / lpTotalSupply;
 
-      // 5. Apply slippage tolerance
+      // Calculate minimum amounts considering slippage tolerance
       const amount0Min = getSlippageBounds(expectedAmount0);
       const amount1Min = getSlippageBounds(expectedAmount1);
 
-      // 6. Check allowance of LP tokens
+      // Fetch allowance of LP tokens for router
       const allowanceLP: bigint = await publicClient!.readContract({
         address: selectedPair,
         abi: ERC20Abi,
@@ -246,7 +292,7 @@ const PoolListContainer = ({
         args: [userAddress, routerAddress],
       });
 
-      // 7. Approve LP tokens if needed
+      // Approve LP tokens if allowance insufficient
       if (allowanceLP < parsedLiquidityAmount) {
         try {
           const txHash = await writeContractAsync({
@@ -255,6 +301,7 @@ const PoolListContainer = ({
             functionName: 'approve',
             args: [routerAddress, MAX_UINT256],
           });
+
           await publicClient!.waitForTransactionReceipt({ hash: txHash });
         } catch (error) {
           console.error('LP token approval failed:', error);
@@ -262,7 +309,7 @@ const PoolListContainer = ({
         }
       }
 
-      // 8. Execute removeLiquidity
+      // Execute removeLiquidity on-chain
       const txHash = await writeContractAsync({
         address: routerAddress,
         abi: routerABI,
@@ -277,10 +324,10 @@ const PoolListContainer = ({
         ],
       });
 
-      // Wait for tx confirmation
+      // Wait for transaction confirmation
       await publicClient.waitForTransactionReceipt({ hash: txHash });
 
-      // Refetch pools after tx confirmation
+      // Refresh pools data after removal
       await fetchAllPools(publicClient);
       await fetchUserPools(userAddress, publicClient);
 
@@ -291,32 +338,30 @@ const PoolListContainer = ({
     }
   };
 
+  // Open Add Liquidity modal with selected pair
   const onAddLiquidityClick = (pairAddress: `0x${string}`) => {
     setSelectedPair(pairAddress);
     setIsAddModalOpen(true);
   };
 
+  // Open Remove Liquidity modal with selected pair
   const onRemoveLiquidityClick = (pairAddress: `0x${string}`) => {
     setSelectedPair(pairAddress);
     setIsRemoveModalOpen(true);
   };
 
+  // Close Add Liquidity modal and reset state
   const closeAddModal = () => {
     setLiquidityWarning(null);
     setIsAddModalOpen(false);
     setSelectedPair(null);
   };
 
+  // Close Remove Liquidity modal and reset state
   const closeRemoveModal = () => {
     setIsRemoveModalOpen(false);
     setSelectedPair(null);
   };
-
-  // You can keep your handlers here: handleAddLiquidity, handleRemoveLiquidity
-  // OR abstract them to external helpers if needed.
-  console.log('Selected Pool:', selectedPool);
-  console.log('Pools prop:', pools);
-  console.log('Selected Pair:', selectedPair);
 
   if (isLoadingAllPools) {
     return (
@@ -336,7 +381,7 @@ const PoolListContainer = ({
         onRemoveLiquidityClick={onRemoveLiquidityClick}
       />
 
-      {isAddModalOpen && selectedPool && (
+      {isAddModalOpen && selectedPool ? (
         <AddLiquidityModal
           isOpen={isAddModalOpen}
           onClose={closeAddModal}
@@ -345,16 +390,18 @@ const PoolListContainer = ({
           handleAddLiquidity={handleAddLiquidity}
           token0={selectedPool.token0}
           token1={selectedPool.token1}
-          decimalsToken0={selectedPool.decimals0}
-          decimalsToken1={selectedPool.decimals1}
+          decimals0={selectedPool.decimals0}
+          decimals1={selectedPool.decimals1}
           reserveA={selectedPool.userReserve0}
           reserveB={selectedPool.userReserve1}
           symbolToken0={selectedPool.symbolToken0}
           symbolToken1={selectedPool.symbolToken1}
+          price0={getMockPrice(selectedPool.symbolToken0 ?? '') ?? undefined}
+          price1={getMockPrice(selectedPool.symbolToken1 ?? '') ?? undefined}
         />
-      )}
+      ) : null}
 
-      {isRemoveModalOpen && selectedPool && (
+      {isRemoveModalOpen && selectedPool ? (
         <RemoveLiquidityModal
           isOpen={isRemoveModalOpen}
           onClose={closeRemoveModal}
@@ -368,7 +415,7 @@ const PoolListContainer = ({
           decimals0={selectedPool.decimals0}
           decimals1={selectedPool.decimals1}
         />
-      )}
+      ) : null}
     </div>
   );
 };

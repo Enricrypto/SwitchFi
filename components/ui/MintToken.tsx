@@ -95,8 +95,12 @@ const MintToken = () => {
   /* ------------------ Refresh Balance After Mint ------------------ */
   useEffect(() => {
     if (isMintConfirmed) {
+      toast.success('✅ Mint confirmed!');
       refetchBalance();
-      setTxHash(null);
+      const timer = setTimeout(() => {
+        setTxHash(null);
+      }, 5000); // 5 seconds
+      return () => clearTimeout(timer);
     }
   }, [isMintConfirmed, refetchBalance]);
 

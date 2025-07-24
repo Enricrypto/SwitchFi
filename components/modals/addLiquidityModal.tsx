@@ -15,6 +15,7 @@ import { quote } from '../../utils/liquidityCalculations';
 import { AddLiquidityModalProps } from '../../types/interfaces';
 import Spinner from '../ui/Spinner';
 import { PlusCircle } from 'lucide-react';
+import BigNumber from 'bignumber.js';
 
 const AddLiquidityModal = ({
   isOpen,
@@ -24,24 +25,26 @@ const AddLiquidityModal = ({
   handleAddLiquidity,
   token0,
   token1,
-  decimalsToken0,
-  decimalsToken1,
+  decimals0,
+  decimals1,
   reserveA,
   reserveB,
   symbolToken0,
   symbolToken1,
+  price0,
+  price1,
 }: AddLiquidityModalProps) => {
   const { address: userAddress } = useAccount();
 
   /** ----------------------- State ----------------------- */
 
-  const [amountA, setAmountA] = useState('');
-  const [amountB, setAmountB] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [activeInput, setActiveInput] = useState<'A' | 'B' | null>(null);
+  const [amountA, setAmountA] = useState(''); // user input for token A
+  const [amountB, setAmountB] = useState(''); // user input for token B
+  const [isSubmitting, setIsSubmitting] = useState(false); // tracks form submission
 
   /** ----------------------- Read User Balances ----------------------- */
 
+  // Read the balance of token0 for the connected user
   const { data: tokenABalance } = useReadContract({
     address: token0,
     abi: ERC20Abi,
@@ -49,6 +52,7 @@ const AddLiquidityModal = ({
     args: [userAddress as `0x${string}`],
   });
 
+  // Read the balance of token1 for the connected user
   const { data: tokenBBalance } = useReadContract({
     address: token1,
     abi: ERC20Abi,
@@ -56,63 +60,63 @@ const AddLiquidityModal = ({
     args: [userAddress as `0x${string}`],
   });
 
-  const handleAmountAChange = (value: string) => {
-    setActiveInput('A');
-    setAmountA(value);
+  /** ----------------------- Handle Input Changes ----------------------- */
 
-    // Reset liquidity warning on input
+  // When the user updates amount for token A
+  const handleAmountAChange = (value: string) => {
+    setAmountA(value);
     if (liquidityWarning) setLiquidityWarning(null);
 
-    // Early exit if value is empty or non-positive
     const numericValue = parseFloat(value);
     if (!value || isNaN(numericValue) || numericValue <= 0) {
       setAmountB('');
       return;
     }
 
-    // Ensure required values exist
-    if (
-      decimalsToken0 != null &&
-      decimalsToken1 != null &&
-      reserveA > BigInt(0) &&
-      reserveB > BigInt(0)
-    ) {
-      try {
-        const amountADesired = BigInt(
-          (numericValue * 10 ** decimalsToken0).toFixed(0)
-        );
+    try {
+      // Convert to base units
+      const amountADesired = BigInt(
+        (numericValue * 10 ** decimals0!).toFixed(0)
+      );
+      let amountBOptimal: bigint = BigInt(0);
 
-        const amountBOptimal = quote(amountADesired, reserveA, reserveB);
-
-        // If result is zero, something is wrong
-        if (amountBOptimal === BigInt(0)) {
-          setLiquidityWarning('Insufficient liquidity for this amount.');
-          setAmountB('');
-          return;
-        }
-
-        const formattedAmountB = (
-          Number(amountBOptimal) /
-          10 ** decimalsToken1
-        ).toLocaleString();
-
-        setAmountB(formattedAmountB);
-      } catch (error) {
-        console.error('Error calculating optimal amountB:', error);
+      // Calculate optimal token B amount using reserves or prices
+      // When reserves exist in the pool (reserveA > 0 && reserveB > 0), you call
+      // quote(amountIn, reserveIn, reserveOut) to maintain the pool ratio.
+      // When reserves are empty (new pool or no liquidity), you fall back to USD prices
+      // (price0 and price1) to calculate the equivalent amount of the other token.
+      if (reserveA > BigInt(0) && reserveB > BigInt(0)) {
+        amountBOptimal = quote(amountADesired, reserveA, reserveB);
+      } else if (price0 && price1) {
+        const usdValue = numericValue * price0;
+        const tokenBAmount = usdValue / price1;
+        amountBOptimal = BigInt((tokenBAmount * 10 ** decimals1!).toFixed(0));
+      } else {
         setAmountB('');
-        setLiquidityWarning('Invalid amount or calculation error.');
+        return;
       }
-    } else {
-      // No reserves — assume new pool or zero liquidity
+
+      if (amountBOptimal === BigInt(0)) {
+        setLiquidityWarning('Insufficient liquidity for this amount.');
+        setAmountB('');
+        return;
+      }
+
+      // Format for display
+      const formattedAmountB = new BigNumber(amountBOptimal.toString())
+        .dividedBy(new BigNumber(10).pow(decimals1!))
+        .toFixed();
+      setAmountB(formattedAmountB);
+    } catch (error) {
+      console.error('Error calculating amountB:', error);
       setAmountB('');
+      setLiquidityWarning('Invalid amount or calculation error.');
     }
   };
 
+  // When the user updates amount for token B
   const handleAmountBChange = (value: string) => {
-    setActiveInput('B');
     setAmountB(value);
-
-    // Reset warning if it was previously shown
     if (liquidityWarning) setLiquidityWarning(null);
 
     const numericValue = parseFloat(value);
@@ -121,56 +125,138 @@ const AddLiquidityModal = ({
       return;
     }
 
-    if (
-      decimalsToken0 != null &&
-      decimalsToken1 != null &&
-      reserveA > BigInt(0) &&
-      reserveB > BigInt(0)
-    ) {
-      try {
-        const amountBDesired = BigInt(
-          (numericValue * 10 ** decimalsToken1).toFixed(0)
+    try {
+      const amountBDesired = BigInt(
+        new BigNumber(numericValue)
+          .multipliedBy(new BigNumber(10).pow(decimals1!))
+          .toFixed(0)
+      );
+      let amountAOptimal: bigint = BigInt(0);
+
+      // Calculate optimal token A amount
+      if (reserveA > BigInt(0) && reserveB > BigInt(0)) {
+        amountAOptimal = quote(amountBDesired, reserveB, reserveA);
+      } else if (price0 && price1) {
+        const usdValue = numericValue * price1;
+        const tokenAAmount = usdValue / price0;
+        amountAOptimal = BigInt(
+          new BigNumber(tokenAAmount)
+            .multipliedBy(new BigNumber(10).pow(decimals0!))
+            .toFixed(0)
         );
-
-        const amountAOptimal = quote(amountBDesired, reserveB, reserveA); // flipped reserves
-
-        if (amountAOptimal === BigInt(0)) {
-          setLiquidityWarning('Insufficient liquidity for this amount.');
-          setAmountA('');
-          return;
-        }
-
-        const formattedAmountA = (
-          Number(amountAOptimal) /
-          10 ** decimalsToken0
-        ).toLocaleString();
-
-        setAmountA(formattedAmountA);
-      } catch (error) {
-        console.error('Error calculating optimal amountA:', error);
+      } else {
         setAmountA('');
-        setLiquidityWarning('Invalid amount or calculation error.');
+        return;
       }
-    } else {
-      // No liquidity — blank the opposite input
+
+      if (amountAOptimal === BigInt(0)) {
+        setLiquidityWarning('Insufficient liquidity for this amount.');
+        setAmountA('');
+        return;
+      }
+
+      const formattedAmountA = new BigNumber(amountAOptimal.toString())
+        .dividedBy(new BigNumber(10).pow(decimals1!))
+        .toFixed();
+      setAmountA(formattedAmountA);
+    } catch (error) {
+      console.error('Error calculating amountA:', error);
       setAmountA('');
+      setLiquidityWarning('Invalid amount or calculation error.');
+    }
+  };
+
+  /** ----------------------- Handle MAX Buttons ----------------------- */
+
+  // Max button for token A: fill max available token A and calculate required token B
+  const handleMaxA = () => {
+    if (!tokenABalance || !decimals0 || !decimals1 || (!price0 && !reserveA))
+      return;
+
+    const maxTokenA = new BigNumber(formatUnits(tokenABalance, decimals0));
+    let amountBOptimal = new BigNumber(0);
+
+    if (reserveA > BigInt(0) && reserveB > BigInt(0)) {
+      const amountADesired = BigInt(
+        maxTokenA.multipliedBy(new BigNumber(10).pow(decimals0)).toFixed(0)
+      );
+      const amountB = quote(amountADesired, reserveA, reserveB);
+      amountBOptimal = new BigNumber(amountB.toString()).dividedBy(
+        new BigNumber(10).pow(decimals1)
+      );
+    } else if (price0 && price1) {
+      const usdValue = maxTokenA.multipliedBy(price0);
+      amountBOptimal = usdValue.dividedBy(price1);
+    }
+
+    // Ensure user also has enough token B
+    const maxTokenB = new BigNumber(
+      formatUnits(tokenBBalance ?? BigInt(0), decimals1)
+    );
+    if (amountBOptimal.gt(maxTokenB)) {
+      if (!price0 || !price1) return;
+      const usdB = maxTokenB.multipliedBy(price1);
+      const adjustedTokenA = usdB.dividedBy(price0);
+
+      setAmountA(adjustedTokenA.toFixed(6));
+      setAmountB(maxTokenB.toFixed(6));
+    } else {
+      setAmountA(maxTokenA.toFixed(6));
+      setAmountB(amountBOptimal.toFixed(6));
+    }
+  };
+
+  // Max button for token B: fill max available token B and calculate required token A
+  const handleMaxB = () => {
+    if (!tokenBBalance || !decimals0 || !decimals1 || (!price1 && !reserveB))
+      return;
+
+    const maxTokenB = new BigNumber(formatUnits(tokenBBalance, decimals1));
+    let amountAOptimal = new BigNumber(0);
+
+    if (reserveA > BigInt(0) && reserveB > BigInt(0)) {
+      const amountBDesired = BigInt(
+        maxTokenB.multipliedBy(new BigNumber(10).pow(decimals1)).toFixed(0)
+      );
+      const amountA = quote(amountBDesired, reserveB, reserveA);
+      amountAOptimal = new BigNumber(amountA.toString()).dividedBy(
+        new BigNumber(10).pow(decimals0)
+      );
+    } else if (price0 && price1) {
+      const usdValue = maxTokenB.multipliedBy(price1);
+      amountAOptimal = usdValue.dividedBy(price0);
+    }
+
+    const maxTokenA = new BigNumber(
+      formatUnits(tokenABalance ?? BigInt(0), decimals0)
+    );
+    if (amountAOptimal.gt(maxTokenA)) {
+      if (!price0 || !price1) return;
+      const usdA = maxTokenA.multipliedBy(price0);
+      const adjustedTokenB = usdA.dividedBy(price1);
+
+      setAmountA(maxTokenA.toFixed(6));
+      setAmountB(adjustedTokenB.toFixed(6));
+    } else {
+      setAmountB(maxTokenB.toFixed(6));
+      setAmountA(amountAOptimal.toFixed(6));
     }
   };
 
   /** ----------------------- Format Balances for Display ----------------------- */
 
   const formattedTokenABalance = tokenABalance
-    ? formatUnits(tokenABalance, decimalsToken0 ?? 18)
+    ? formatUnits(tokenABalance, decimals0 ?? 18)
     : 0;
   const formattedTokenBBalance = tokenBBalance
-    ? formatUnits(tokenBBalance, decimalsToken1 ?? 18)
+    ? formatUnits(tokenBBalance, decimals1 ?? 18)
     : 0;
 
+  // Validation helpers
   const exceedsBalanceA =
     parseFloat(amountA || '0') > parseFloat(formattedTokenABalance.toString());
   const exceedsBalanceB =
     parseFloat(amountB || '0') > parseFloat(formattedTokenBBalance.toString());
-
   const isAmountAInvalid = amountA === '' || parseFloat(amountA) <= 0;
   const isAmountBInvalid = amountB === '' || parseFloat(amountB) <= 0;
 
@@ -181,11 +267,11 @@ const AddLiquidityModal = ({
     try {
       const success = await handleAddLiquidity(amountA, amountB);
       if (success) {
-        onClose();
+        onClose(); // Close modal on success
       }
     } catch (error) {
       console.error('Add liquidity failed:', error);
-      // Optionally add user-visible error handling here (e.g., toast notifications)
+      // Optional: notify user of failure
     } finally {
       setIsSubmitting(false);
     }
@@ -245,9 +331,7 @@ const AddLiquidityModal = ({
                         Balance: {formattedTokenABalance}{' '}
                         <button
                           type="button"
-                          onClick={() =>
-                            setAmountA(formattedTokenABalance.toString())
-                          }
+                          onClick={() => handleMaxA()}
                           className="ml-2 px-2 py-0.5 rounded text-gray-400 hover:bg-gray-700 hover:text-gray-200 cursor-pointer select-none"
                         >
                           MAX
@@ -268,6 +352,12 @@ const AddLiquidityModal = ({
                       onChange={(e) => handleAmountAChange(e.target.value)}
                       placeholder={`Enter amount of ${symbolToken0}`}
                     />
+                    <p className="text-xs text-gray-400 mt-1">
+                      ≈ $
+                      {(parseFloat(amountA || '0') * (price0 ?? 0)).toFixed(2)}{' '}
+                      USD
+                    </p>
+
                     {amountA !== '' && isAmountAInvalid && !exceedsBalanceA && (
                       <p className="text-xs text-red-500 mt-1">
                         Please enter a valid amount greater than 0.
@@ -290,9 +380,7 @@ const AddLiquidityModal = ({
                         Balance: {formattedTokenBBalance}{' '}
                         <button
                           type="button"
-                          onClick={() =>
-                            setAmountB(formattedTokenBBalance.toString())
-                          }
+                          onClick={handleMaxB}
                           className="ml-2 px-2 py-0.5 rounded text-gray-400 hover:bg-gray-700 hover:text-gray-200 cursor-pointer select-none"
                         >
                           MAX
@@ -305,7 +393,7 @@ const AddLiquidityModal = ({
                       min="0"
                       step="any"
                       className={`w-full rounded-xl bg-gray-800/80 px-4 py-3 text-sm text-white shadow-inner border transition-all duration-800 ${
-                        exceedsBalanceA
+                        exceedsBalanceB
                           ? 'border-red-500'
                           : 'border-gray-700 focus:border-purple-500 focus:ring-purple-500'
                       }`}
@@ -313,6 +401,11 @@ const AddLiquidityModal = ({
                       onChange={(e) => handleAmountBChange(e.target.value)}
                       placeholder={`Enter amount of ${symbolToken1}`}
                     />
+                    <p className="text-xs text-gray-400 mt-1">
+                      ≈ $
+                      {(parseFloat(amountB || '0') * (price1 ?? 0)).toFixed(2)}{' '}
+                      USD
+                    </p>
                     {amountB !== '' && isAmountBInvalid && !exceedsBalanceB && (
                       <p className="text-xs text-red-500 mt-1">
                         Please enter a valid amount greater than 0.

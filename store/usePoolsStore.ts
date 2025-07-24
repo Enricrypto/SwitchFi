@@ -34,7 +34,6 @@ export const usePoolsStore = create<PoolsState>((set, get) => ({
 
   fetchAllPools: async (publicClient) => {
     if (!publicClient) {
-      console.log('Public client is undefined', publicClient);
       return;
     }
     set({ isLoadingAllPools: true, errorAllPools: undefined });
@@ -113,6 +112,19 @@ export const usePoolsStore = create<PoolsState>((set, get) => ({
             [decimals0, decimals1] = [decB, decA];
           }
 
+          const [symbolToken0, symbolToken1] = await Promise.all([
+            publicClient.readContract({
+              address: token0,
+              abi: ERC20Abi,
+              functionName: 'symbol',
+            }),
+            publicClient.readContract({
+              address: token1,
+              abi: ERC20Abi,
+              functionName: 'symbol',
+            }),
+          ]);
+
           allPools.push({
             index: i,
             pairAddress,
@@ -123,8 +135,8 @@ export const usePoolsStore = create<PoolsState>((set, get) => ({
             reserves: [reserve0, reserve1],
             lpTotalSupply: lpTotalSupply as bigint,
             lpDecimals: Number(lpDecimals),
-            symbolToken0: undefined,
-            symbolToken1: undefined,
+            symbolToken0: symbolToken0 as string,
+            symbolToken1: symbolToken1 as string,
             userSharePct: 0,
             userReserve0: BigInt(0),
             userReserve1: BigInt(0),
@@ -148,7 +160,6 @@ export const usePoolsStore = create<PoolsState>((set, get) => ({
 
   fetchUserPools: async (userAddress, publicClient) => {
     set({ isLoadingUserPools: true, errorUserPools: undefined });
-    console.log('Fetching user pools for:', userAddress);
 
     try {
       let allPools = get().allPools;
@@ -241,7 +252,6 @@ export const usePoolsStore = create<PoolsState>((set, get) => ({
           continue;
         }
       }
-      console.log('Fetched user pools:', userPools);
       set({ userPools, isLoadingUserPools: false });
     } catch (err) {
       console.error('Error fetching user pools:', err);
