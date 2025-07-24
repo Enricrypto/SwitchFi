@@ -8,7 +8,6 @@ const UserPoolList = ({
   onAddLiquidityClick,
   onRemoveLiquidityClick,
 }: PoolListProps & { isLoading: boolean }) => {
-  console.log('UserPoolList received pools:', pools);
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center h-64 text-gray-400">

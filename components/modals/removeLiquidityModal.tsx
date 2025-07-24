@@ -26,33 +26,44 @@ const RemoveLiquidityModal = ({
 }: RemoveLiquidityModalProps) => {
   /** ----------------------- State ----------------------- */
 
+  // Amount of LP tokens user wants to remove
   const [liquidityAmount, setLiquidityAmount] = useState('');
+  // Submission status for disabling buttons and showing loading
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // Local error message to display validation or transaction errors
   const [error, setError] = useState<string | null>(null);
 
   /** ----------------------- Format LP Balance ----------------------- */
 
+  // Format user's LP token balance from BigInt to human-readable string
   const formattedBalance =
     balanceLP && lpDecimals ? formatUnits(balanceLP, lpDecimals) : '0';
 
+  // Parse amounts for validation
   const parsedLiquidityAmount = parseFloat(liquidityAmount || '0');
   const parsedBalance = parseFloat(formattedBalance || '0');
 
+  // Validation flags for input amount
   const isAmountEmpty = liquidityAmount === '';
   const isAmountZeroOrNegative = parsedLiquidityAmount <= 0;
   const exceedsLPBalance =
     !isAmountEmpty && parsedLiquidityAmount > parsedBalance;
 
+  // Validation error message depending on input state
   let validationError: string | null = null;
   if (isAmountEmpty) {
-    validationError = null; // no error if empty input yet
+    validationError = null; // no error if input is empty yet
   } else if (isAmountZeroOrNegative) {
     validationError = 'Amount must be greater than zero.';
   } else if (exceedsLPBalance) {
     validationError = 'Amount exceeds your LP token balance.';
   }
 
+  /** ----------------------- Compute Expected Token Amounts ----------------------- */
+
+  // Calculate expected amounts of token0 and token1 received when removing liquidity
   const [expectedAmount0, expectedAmount1] = useMemo(() => {
+    // Validate inputs before calculation
     if (
       !liquidityAmount ||
       !lpTotalSupply ||
@@ -64,11 +75,14 @@ const RemoveLiquidityModal = ({
     }
 
     try {
+      // Convert input amount to BigInt with correct decimals
       const liquidityBN = parseUnits(liquidityAmount, lpDecimals ?? 18);
 
+      // Calculate proportional amounts of token0 and token1 based on reserves and total LP supply
       const amount0 = (reserves[0] * liquidityBN) / lpTotalSupply;
       const amount1 = (reserves[1] * liquidityBN) / lpTotalSupply;
 
+      // Format calculated amounts to human-readable strings
       return [
         formatUnits(amount0, decimals0 ?? 18),
         formatUnits(amount1, decimals1 ?? 18),
@@ -88,15 +102,17 @@ const RemoveLiquidityModal = ({
 
   /** ----------------------- Handle Remove Liquidity Submit ----------------------- */
 
+  // Called when user confirms removal of liquidity
   const handleSubmit = async () => {
-    setIsSubmitting(true);
-    setError(null);
+    setIsSubmitting(true); // disable inputs and buttons
+    setError(null); // clear previous errors
 
     try {
+      // Call parent handler, passing the amount to remove
       const success = await handleRemoveLiquidity(liquidityAmount);
       if (success) {
-        onClose();
-        setLiquidityAmount('');
+        onClose(); // close modal on success
+        setLiquidityAmount(''); // reset input
       } else {
         setError(
           'Failed to remove liquidity. Please check the amount and try again.'
@@ -106,7 +122,7 @@ const RemoveLiquidityModal = ({
       setError('An unexpected error occurred.');
       console.error('Remove liquidity failed:', err);
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false); // re-enable inputs/buttons
     }
   };
 
@@ -160,6 +176,7 @@ const RemoveLiquidityModal = ({
 
                 <div className="space-y-4">
                   <div>
+                    {/* Input for specifying LP token amount to remove */}
                     <div className="mb-1 flex justify-between items-center">
                       <label
                         htmlFor="liquidityAmount"
@@ -167,6 +184,7 @@ const RemoveLiquidityModal = ({
                       >
                         Amount of LP tokens to remove
                       </label>
+                      {/* MAX button sets input to full LP balance */}
                       <button
                         type="button"
                         onClick={() => {
@@ -194,17 +212,20 @@ const RemoveLiquidityModal = ({
                       placeholder="Enter LP token amount"
                       required
                     />
+                    {/* Show validation error message for input */}
                     {validationError && (
                       <div className="text-red-400 text-sm mt-1">
                         {validationError}
                       </div>
                     )}
                   </div>
+                  {/* Show submission or other errors */}
                   {error && (
                     <div className="text-red-400 text-sm mt-1">{error}</div>
                   )}
                 </div>
 
+                {/* Display estimated token amounts user will receive on removal */}
                 {expectedAmount0 && expectedAmount1 && (
                   <div className="mt-3">
                     <p className="text-gray-400">Estimated received:</p>
@@ -235,6 +256,7 @@ const RemoveLiquidityModal = ({
                     type="button"
                     className="rounded-md bg-purple-600 px-4 py-2 text-sm font-semibold text-white hover:bg-purple-700 disabled:opacity-50"
                     onClick={handleSubmit}
+                    // Disable submit if submitting, input invalid or empty
                     disabled={
                       isSubmitting || !!validationError || isAmountEmpty
                     }

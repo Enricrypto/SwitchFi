@@ -1,4 +1,5 @@
 import { calculateOptimalAmounts } from './liquidityCalculations';
+import { ERC20Abi, MAX_UINT256 } from '@/constants';
 
 // Type for contract write function, returns transaction hash.
 type WriteContractAsync = (params: {
@@ -26,8 +27,6 @@ export const validateOptimalAmounts = (
     reserve1
   );
 };
-
-import { ERC20Abi, MAX_UINT256 } from '@/constants';
 
 // Approves router to spend tokens if allowance is insufficient.
 export const approveIfNeeded = async (

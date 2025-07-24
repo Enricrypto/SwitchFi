@@ -1,5 +1,5 @@
 export interface Token {
-  symbol: string;
+  symbol?: string;
   address: `0x${string}`;
 }
 
@@ -67,12 +67,14 @@ export interface AddLiquidityModalProps {
   handleAddLiquidity: (amountA: string, amountB: string) => Promise<boolean>;
   token0: `0x${string}`;
   token1: `0x${string}`;
-  decimalsToken0: number | null;
-  decimalsToken1: number | null;
+  decimals0: number | undefined;
+  decimals1: number | undefined;
   reserveA: bigint;
   reserveB: bigint;
   symbolToken0: string | undefined;
   symbolToken1: string | undefined;
+  price0: number | undefined;
+  price1: number | undefined;
 }
 
 export interface PoolListProps {

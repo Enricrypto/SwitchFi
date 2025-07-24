@@ -1,4 +1,5 @@
 import { arbitrum } from 'wagmi/chains';
+// import { defineChain } from 'viem';
 import { injected } from '@wagmi/connectors';
 import { createConfig } from 'wagmi';
 import { http } from 'viem';
