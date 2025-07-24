@@ -8,7 +8,7 @@ import Spinner from '../ui/Spinner';
 import AddLiquidityModal from '../modals/addLiquidityModal';
 import RemoveLiquidityModal from '../modals/removeLiquidityModal';
 import { usePoolsStore } from '../../store/usePoolsStore';
-import { getSlippageBounds } from '../../utils/slippage';
+import { getMinAmountAfterSlippage } from '../../utils/slippage';
 import { validateOptimalAmounts, approveIfNeeded } from '../../utils/liquidity';
 import { parseUnits } from 'viem/utils';
 import {
@@ -157,8 +157,8 @@ const PoolListContainer = ({
       const optimalAmounts = validateOptimalAmounts(
         parsedAmount0,
         parsedAmount1,
-        getSlippageBounds(parsedAmount0),
-        getSlippageBounds(parsedAmount1),
+        getMinAmountAfterSlippage(parsedAmount0),
+        getMinAmountAfterSlippage(parsedAmount1),
         reserves[0],
         reserves[1]
       );
@@ -175,8 +175,8 @@ const PoolListContainer = ({
       const [finalParsed0, finalParsed1] = optimalAmounts;
 
       // Calculate minimum amounts considering slippage tolerance
-      const amount0Min = getSlippageBounds(finalParsed0);
-      const amount1Min = getSlippageBounds(finalParsed1);
+      const amount0Min = getMinAmountAfterSlippage(finalParsed0);
+      const amount1Min = getMinAmountAfterSlippage(finalParsed1);
 
       // Approve tokens for router if allowance is insufficient
       await approveIfNeeded(
@@ -281,8 +281,8 @@ const PoolListContainer = ({
         (reserve1 * parsedLiquidityAmount) / lpTotalSupply;
 
       // Calculate minimum amounts considering slippage tolerance
-      const amount0Min = getSlippageBounds(expectedAmount0);
-      const amount1Min = getSlippageBounds(expectedAmount1);
+      const amount0Min = getMinAmountAfterSlippage(expectedAmount0);
+      const amount1Min = getMinAmountAfterSlippage(expectedAmount1);
 
       // Fetch allowance of LP tokens for router
       const allowanceLP: bigint = await publicClient!.readContract({

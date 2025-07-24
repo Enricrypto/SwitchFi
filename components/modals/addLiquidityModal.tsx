@@ -13,7 +13,9 @@ import { useAccount, useReadContract } from 'wagmi';
 import { formatUnits } from 'viem/utils';
 import { quote } from '../../utils/liquidityCalculations';
 import { AddLiquidityModalProps } from '../../types/interfaces';
+import { SwapSettings } from '../ui/SwapSettings';
 import Spinner from '../ui/Spinner';
+import { Settings } from 'lucide-react';
 import { PlusCircle } from 'lucide-react';
 import BigNumber from 'bignumber.js';
 
@@ -41,6 +43,8 @@ const AddLiquidityModal = ({
   const [amountA, setAmountA] = useState(''); // user input for token A
   const [amountB, setAmountB] = useState(''); // user input for token B
   const [isSubmitting, setIsSubmitting] = useState(false); // tracks form submission
+  const [slippage, setSlippage] = useState(0.5); // default slippage 0.5%
+  const [showSlippageSettings, setShowSlippageSettings] = useState(false); // toggle slippage panel
 
   /** ----------------------- Read User Balances ----------------------- */
 
@@ -310,9 +314,33 @@ const AddLiquidityModal = ({
             >
               {/* Modal content container */}
               <DialogPanel className="w-full max-w-md transform overflow-hidden rounded-3xl bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 backdrop-blur-md border border-white/10 p-8 text-left align-middle shadow-2xl transition-all text-white">
-                <DialogTitle className="flex items-center gap-2 text-xl font-semibold">
-                  Add Liquidity
-                </DialogTitle>
+                <div className="flex items-center justify-between gap-2">
+                  <DialogTitle className="flex items-center gap-2 text-xl font-semibold">
+                    Add Liquidity
+                  </DialogTitle>
+
+                  <button
+                    type="button"
+                    aria-label="Toggle slippage tolerance settings"
+                    onClick={() =>
+                      setShowSlippageSettings(!showSlippageSettings)
+                    }
+                    className="p-1 rounded hover:bg-gray-700 transition cursor-pointer"
+                  >
+                    <Settings className="w-6 h-6 text-grey-800 pb-1" />
+                  </button>
+                </div>
+
+                {/* Render full SwapSettings UI panel if toggled */}
+                {showSlippageSettings && (
+                  <div className="p-1 mb-4">
+                    <SwapSettings
+                      slippage={slippage}
+                      setSlippage={setSlippage}
+                      showSlippage={showSlippageSettings}
+                    />
+                  </div>
+                )}
 
                 {liquidityWarning && (
                   <div className="bg-yellow-100 text-yellow-800 p-3 rounded-md mb-4 text-sm">
@@ -354,7 +382,12 @@ const AddLiquidityModal = ({
                     />
                     <p className="text-xs text-gray-400 mt-1">
                       ≈ $
-                      {(parseFloat(amountA || '0') * (price0 ?? 0)).toFixed(2)}{' '}
+                      {(
+                        parseFloat(amountA || '0') * (price0 ?? 0)
+                      ).toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}{' '}
                       USD
                     </p>
 
@@ -403,7 +436,12 @@ const AddLiquidityModal = ({
                     />
                     <p className="text-xs text-gray-400 mt-1">
                       ≈ $
-                      {(parseFloat(amountB || '0') * (price1 ?? 0)).toFixed(2)}{' '}
+                      {(
+                        parseFloat(amountB || '0') * (price0 ?? 0)
+                      ).toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}{' '}
                       USD
                     </p>
                     {amountB !== '' && isAmountBInvalid && !exceedsBalanceB && (

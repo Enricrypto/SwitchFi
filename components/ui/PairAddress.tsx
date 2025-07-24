@@ -70,8 +70,8 @@ const PairAddress = ({
 
   /** ------------------ Render pool card UI ------------------ */
   return (
-    <div className="bg-gradient-to-br from-[#1B002B] to-[#320148] border border-[#AB37FF33] rounded-3xl p-6 shadow-[0_0_30px_#AB37FF33] backdrop-blur-sm transition-all duration-300 h-full flex flex-col justify-between">
-      <div className="flex-1">
+    <div className="bg-gradient-to-br from-[#1B002B] to-[#320148] border border-[#AB37FF33] rounded-3xl p-6 shadow-[0_0_30px_#AB37FF33] backdrop-blur-sm transition-all duration-300 h-full flex flex-col">
+      <div className="flex-grow flex flex-col">
         {/* ------------------ Token icons + symbols ------------------ */}
         <div className="flex items-center justify-center gap-6 mb-6">
           <div className="flex items-center gap-4">
@@ -86,7 +86,7 @@ const PairAddress = ({
           <button
             onClick={handleVisitPoolClick}
             type="button"
-            className="text-xl font-semibold text-white bg-transparent border-0 hover:underline hover:text-cosmic-primary transition duration-200"
+            className="text-xl font-semibold text-white bg-transparent border-0 hover:underline hover:text-cosmic-primary cursor-pointer transition duration-200"
           >
             {token0Info?.symbol || 'Token0'} / {token1Info?.symbol || 'Token1'}
           </button>
@@ -143,9 +143,7 @@ const PairAddress = ({
             <p className="text-sm text-purple-300">
               Your Share:{' '}
               <span className="font-semibold">
-                {Number(userSharePct) < 0.01
-                  ? '< 0.01%'
-                  : `${Number(userSharePct).toFixed(2)}%`}
+                {(userSharePct * 100).toFixed(2)}%
               </span>
             </p>
             <p className="text-sm text-purple-300">
@@ -154,25 +152,25 @@ const PairAddress = ({
             </p>
           </div>
         )}
+      </div>
 
-        {/* ------------------ Action Buttons ------------------ */}
-        <div className="flex flex-col sm:flex-row gap-4 mt-6 justify-center">
-          <button
-            className="flex items-center justify-center gap-2 text-base font-semibold text-white bg-[#AB37FF] hover:bg-[#C155FF] px-6 py-3 rounded-full shadow-[0_0_20px_#AB37FF66] transition duration-200"
-            onClick={() => onAddLiquidityClick(pairAddress as `0x${string}`)}
-          >
-            Add Liquidity
-            <PlusCircle className="w-5 h-5 text-white" />
-          </button>
+      {/* ------------------ Action Buttons ------------------ */}
+      <div className="mt-auto pt-6 flex flex-col sm:flex-row gap-4 justify-center">
+        <button
+          className="flex items-center justify-center gap-2 text-base font-semibold text-white bg-[#AB37FF] hover:bg-[#C155FF] px-6 py-3 rounded-full shadow-[0_0_20px_#AB37FF66] cursor-pointer transition duration-200"
+          onClick={() => onAddLiquidityClick(pairAddress as `0x${string}`)}
+        >
+          Add Liquidity
+          <PlusCircle className="w-5 h-5 text-white" />
+        </button>
 
-          <button
-            className="flex items-center justify-center gap-2 text-base font-semibold text-white bg-[#1C012D] hover:bg-[#2A0145] px-6 py-3 rounded-full shadow-inner border border-[#AB37FF33] transition duration-200"
-            onClick={() => onRemoveLiquidityClick(pairAddress as `0x${string}`)}
-          >
-            Remove Liquidity
-            <MinusCircle className="w-5 h-5 text-[#AB37FF]" />
-          </button>
-        </div>
+        <button
+          className="flex items-center justify-center gap-2 text-base font-semibold text-white bg-[#1C012D] hover:bg-[#2A0145] px-6 py-3 rounded-full shadow-inner border border-[#AB37FF33] cursor-pointer transition duration-200"
+          onClick={() => onRemoveLiquidityClick(pairAddress as `0x${string}`)}
+        >
+          Remove Liquidity
+          <MinusCircle className="w-5 h-5 text-[#AB37FF]" />
+        </button>
       </div>
     </div>
   );

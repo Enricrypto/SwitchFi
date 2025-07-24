@@ -212,33 +212,32 @@ export const usePoolsStore = create<PoolsState>((set, get) => ({
             }),
           ]);
 
-          if (balanceLP === BigInt(0)) continue;
-
           const totalSupply = pool.lpTotalSupply || BigInt(0);
+          const balance = balanceLP || BigInt(0);
 
-          const share =
+          const userSharePct =
+            totalSupply === BigInt(0)
+              ? 0
+              : Number((balance * BigInt(1_000_000)) / totalSupply) / 10_000;
+
+          const userReserve0 =
             totalSupply === BigInt(0)
               ? BigInt(0)
-              : (balanceLP * BigInt(1_000_000)) / totalSupply;
+              : (pool.reserves[0] * balance) / totalSupply;
 
-          const amount0 =
+          const userReserve1 =
             totalSupply === BigInt(0)
               ? BigInt(0)
-              : (pool.reserves[0] * balanceLP) / totalSupply;
+              : (pool.reserves[1] * balance) / totalSupply;
 
-          const amount1 =
-            totalSupply === BigInt(0)
-              ? BigInt(0)
-              : (pool.reserves[1] * balanceLP) / totalSupply;
-
-          const pct = Number(share) / 10_000;
+          const pct = Number(userSharePct) / 100;
 
           userPools.push({
             ...pool,
             balanceLP: balanceLP as bigint,
             userSharePct: pct,
-            userReserve0: amount0,
-            userReserve1: amount1,
+            userReserve0: userReserve0 as bigint,
+            userReserve1: userReserve1 as bigint,
             allowanceToken0: allowanceToken0 as bigint,
             allowanceToken1: allowanceToken1 as bigint,
             symbolToken0: symbolToken0 as string,
