@@ -13,7 +13,7 @@ export default function Header() {
   const isActive = (path: string) => pathname === path;
 
   return (
-    <header className="w-full flex justify-between items-center px-6 py-4 h-20 bg-transparent">
+    <header className="w-full flex justify-between items-center p-12 h-20 bg-transparent">
       <Link href="/">
         <Image
           src="/logo2Switch.png" // path relative to /public
@@ -35,7 +35,7 @@ export default function Header() {
         <div className="relative">
           <button
             onClick={() => setDropdownOpen(!dropdownOpen)}
-            className="hover:text-purple-600 transition-colors duration-300"
+            className="hover:text-purple-600 transition-colors duration-300 cursor-pointer"
           >
             Pools
           </button>

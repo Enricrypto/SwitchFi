@@ -1,11 +1,13 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import { useReadContract, useAccount } from 'wagmi';
-import { pairABI, ERC20Abi } from '@/constants';
+import { useEffect } from 'react';
+import { useReadContract, useAccount, usePublicClient } from 'wagmi';
+import { arbitrum } from 'wagmi/chains';
+import { ERC20Abi } from '@/constants';
 import { formatUnits } from 'viem';
 import Header from '../../../components/ui/Header';
+import { usePoolsStore } from '../../../store/usePoolsStore';
 
 const PoolDetailPage = () => {
   /* ------------------ Get URL params ------------------ */
@@ -14,126 +16,121 @@ const PoolDetailPage = () => {
   /* ------------------ Get user account info ------------------ */
   const { address: userAddress, isConnected } = useAccount();
 
-  /* ------------------ State: Token addresses and reserves ------------------ */
-  const [token0Address, setToken0Address] = useState<`0x${string}` | null>(
-    null
-  );
-  const [token1Address, setToken1Address] = useState<`0x${string}` | null>(
-    null
-  );
-  const [reserves, setReserves] = useState<[bigint, bigint] | null>(null);
+  const publicClient = usePublicClient({ chainId: arbitrum.id });
 
-  /* ------------------ Read token0 and token1 addresses from pair contract ------------------ */
-  const { data: token0 } = useReadContract({
-    address: pairAddress as `0x${string}`,
-    abi: pairABI,
-    functionName: 'token0',
+  // Normalize pairAddress to a string or undefined
+  const normalizedPairAddress = Array.isArray(pairAddress)
+    ? pairAddress[0]
+    : pairAddress;
+
+  // Access pool-related state and actions from the global store
+  const selectedPool = usePoolsStore((state) => {
+    if (!normalizedPairAddress) return undefined;
+
+    return (
+      state.userPools.find(
+        (p) =>
+          p.pairAddress.toLowerCase() === normalizedPairAddress.toLowerCase()
+      ) ??
+      state.allPools.find(
+        (p) =>
+          p.pairAddress.toLowerCase() === normalizedPairAddress.toLowerCase()
+      )
+    );
   });
 
-  const { data: token1 } = useReadContract({
-    address: pairAddress as `0x${string}`,
-    abi: pairABI,
-    functionName: 'token1',
-  });
+  const fetchUserPools = usePoolsStore((state) => state.fetchUserPools);
 
-  /* ------------------ Read reserves from pair contract ------------------ */
-  const { data: reservesData } = useReadContract({
-    address: pairAddress as `0x${string}`,
-    abi: pairABI,
-    functionName: 'getReserves',
-  }) as { data: readonly [bigint, bigint] | undefined };
-
-  /* ------------------ Sync token addresses and reserves state ------------------ */
+  // Fetch pools when user connects and public client is available
   useEffect(() => {
-    if (typeof token0 === 'string' && token0.startsWith('0x')) {
-      setToken0Address(token0 as `0x${string}`);
+    if (!publicClient || !isConnected || !userAddress) return;
+    {
+      fetchUserPools(userAddress, publicClient);
     }
-    if (typeof token1 === 'string' && token1.startsWith('0x')) {
-      setToken1Address(token1 as `0x${string}`);
-    }
-    if (reservesData && reservesData.length === 2) {
-      setReserves([reservesData[0], reservesData[1]]);
-    }
-  }, [token0, token1, reservesData]);
+  }, [isConnected, userAddress, fetchUserPools, publicClient]);
 
-  /* ------------------ Read token0 decimals ------------------ */
-  const { data: token0Decimals } = useReadContract({
-    address: token0Address as `0x${string}`,
-    abi: ERC20Abi,
-    functionName: 'decimals',
-    query: { enabled: !!token0Address },
-  });
-
-  /* ------------------ Read token1 decimals ------------------ */
-  const { data: token1Decimals } = useReadContract({
-    address: token1Address as `0x${string}`,
-    abi: ERC20Abi,
-    functionName: 'decimals',
-    query: { enabled: !!token1Address },
-  });
+  const {
+    token0,
+    token1,
+    decimals0,
+    decimals1,
+    reserves,
+    userReserve0,
+    userReserve1,
+    symbolToken0,
+    symbolToken1,
+    userSharePct,
+  } = selectedPool ?? {};
 
   /* ------------------ Read user token0 balance ------------------ */
   const { data: token0BalanceRaw } = useReadContract({
-    address: token0Address as `0x${string}`,
+    address: token0 as `0x${string}`,
     abi: ERC20Abi,
     functionName: 'balanceOf',
     args: userAddress ? [userAddress] : undefined,
-    query: { enabled: !!userAddress && !!token0Address },
   });
 
   /* ------------------ Read user token1 balance ------------------ */
   const { data: token1BalanceRaw } = useReadContract({
-    address: token1Address as `0x${string}`,
+    address: token1 as `0x${string}`,
     abi: ERC20Abi,
     functionName: 'balanceOf',
     args: userAddress ? [userAddress] : undefined,
-    query: { enabled: !!userAddress && !!token1Address },
   });
 
   /* ------------------ Format token balances ------------------ */
   const formattedToken0Balance =
     token0BalanceRaw && typeof token0BalanceRaw === 'bigint'
-      ? formatUnits(token0BalanceRaw, token0Decimals ?? 18)
+      ? Number(formatUnits(token0BalanceRaw, decimals0 ?? 18)).toLocaleString(
+          undefined,
+          {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 4, // show up to 4 decimals max
+          }
+        )
       : '0';
 
   const formattedToken1Balance =
     token1BalanceRaw && typeof token1BalanceRaw === 'bigint'
-      ? formatUnits(token1BalanceRaw, token1Decimals ?? 18)
+      ? Number(formatUnits(token1BalanceRaw, decimals1 ?? 18)).toLocaleString(
+          undefined,
+          {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 4,
+          }
+        )
       : '0';
 
   /* ------------------ Format reserves ------------------ */
   const reserve0Formatted =
-    reserves && token0Decimals !== undefined
-      ? formatUnits(reserves[0], token0Decimals)
+    reserves && decimals0 !== undefined
+      ? formatUnits(reserves[0], decimals0)
       : '0';
 
   const reserve1Formatted =
-    reserves && token1Decimals !== undefined
-      ? formatUnits(reserves[1], token1Decimals)
+    reserves && decimals1 !== undefined
+      ? formatUnits(reserves[1], decimals1)
       : '0';
 
-  /* ------------------ Read token symbols ------------------ */
-  const { data: token0Symbol } = useReadContract({
-    address: token0Address as `0x${string}`,
-    abi: ERC20Abi,
-    functionName: 'symbol',
-  });
+  const userReserve0Formatted =
+    userReserve0 && decimals0 !== undefined
+      ? formatUnits(userReserve0, decimals0)
+      : '0';
 
-  const { data: token1Symbol } = useReadContract({
-    address: token1Address as `0x${string}`,
-    abi: ERC20Abi,
-    functionName: 'symbol',
-  });
+  const userReserve1Formatted =
+    userReserve1 && decimals1 !== undefined
+      ? formatUnits(userReserve1, decimals1)
+      : '0';
 
   /* ------------------ Read token names ------------------ */
   const { data: token0Name } = useReadContract({
-    address: token0Address as `0x${string}`,
+    address: token0 as `0x${string}`,
     abi: ERC20Abi,
     functionName: 'name',
   });
 
   const { data: token1Name } = useReadContract({
-    address: token1Address as `0x${string}`,
+    address: token1 as `0x${string}`,
     abi: ERC20Abi,
     functionName: 'name',
   });
@@ -143,110 +140,144 @@ const PoolDetailPage = () => {
       <div className="min-h-screen bg-gradient-to-br from-[#120023] via-[#1B002B] to-[#2B003D] text-white font-sans">
         <Header />
         {/* ------------------ Top Section: Pair & Token Addresses ------------------ */}
-        <div className="m-16 flex flex-col md:flex-row gap-10">
+        <div className="m-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 auto-rows-fr">
           {/* Pair Address */}
-          <div className="flex-1 bg-gradient-to-br from-[#1B002B] to-[#320148] border border-[#AB37FF33] rounded-3xl p-6 shadow-[0_0_30px_#AB37FF33] backdrop-blur-sm transition-all duration-300">
+          <div className="bg-gradient-to-br from-[#1B002B] to-[#320148] border border-[#AB37FF33] rounded-3xl p-6 shadow-[0_0_30px_#AB37FF33] backdrop-blur-sm transition-all duration-300 text-center h-full">
             <h2 className="text-purple-500 text-xl font-semibold mb-3 text-center">
               Pair Address
             </h2>
-            <p className="break-all text-gray-400 text-sm text-center">
+            <p className="break-all text-gray-400 text-md text-md p-4">
               {pairAddress}
             </p>
           </div>
 
-          {/* Token Addresses */}
-          <div className="flex-1 bg-gradient-to-br from-[#1B002B] to-[#320148] border border-[#AB37FF33] rounded-3xl p-6 shadow-[0_0_30px_#AB37FF33] backdrop-blur-sm transition-all duration-300">
+          {/* Token Contracts */}
+          <div className="bg-gradient-to-br from-[#1B002B] to-[#320148] border border-[#AB37FF33] rounded-3xl p-6 shadow-[0_0_30px_#AB37FF33] backdrop-blur-sm transition-all duration-300 text-center h-full">
             <h2 className="text-purple-500 text-xl font-semibold mb-3 text-center">
-              Token Addresses
+              Token Contracts
             </h2>
-            <div className="text-sm space-y-2 text-center">
+            <div className="text-md space-y-3 text-center">
               <p>
                 <span className="font-semibold text-white">
-                  {token0Symbol?.toString() ?? '...'}:
+                  {symbolToken0?.toString() ?? '...'}:
                 </span>{' '}
                 <span className=" text-gray-400 break-all">
-                  {token0Address ?? 'Loading...'}
+                  {token0 ?? 'Loading...'}
                 </span>
               </p>
               <p>
                 <span className="font-semibold text-white">
-                  {token1Symbol?.toString() ?? '...'}:
+                  {symbolToken1?.toString() ?? '...'}:
                 </span>{' '}
                 <span className="text-gray-400 break-all">
-                  {token1Address ?? 'Loading...'}
+                  {token1 ?? 'Loading...'}
                 </span>
               </p>
             </div>
           </div>
-        </div>
 
-        {/* ------------------ Bottom Section: Tokens, Reserves & User Balances ------------------ */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-10 m-16">
+          {/* ------------------ Bottom Section: Tokens, Reserves & User Balances ------------------ */}
           {/* Tokens Card */}
-          <div className="flex-1 bg-gradient-to-br from-[#1B002B] to-[#320148] border border-[#AB37FF33] rounded-3xl p-6 shadow-[0_0_30px_#AB37FF33] backdrop-blur-sm transition-all duration-300 text-center">
-            <h2 className="text-purple-500 text-xl font-semibold mb-6">
-              Tokens
+          <div className="bg-gradient-to-br from-[#1B002B] to-[#320148] border border-[#AB37FF33] rounded-3xl p-6 shadow-[0_0_30px_#AB37FF33] backdrop-blur-sm transition-all duration-300 text-center h-full">
+            <h2 className="text-purple-500 text-xl font-semibold mb-3">
+              Pool Tokens
             </h2>
-            <p className="text-white text-lg font-semibold">
-              {token0Name?.toString() ?? '...'}{' '}
-              <span className=" text-gray-400">
-                ({token0Symbol?.toString() ?? '...'})
-              </span>
-            </p>
-            <p className="text-white text-lg font-semibold mt-4">
-              {token1Name?.toString() ?? '...'}{' '}
-              <span className=" text-gray-400">
-                ({token1Symbol?.toString() ?? '...'})
-              </span>
-            </p>
+            <div className="flex-1 space-y-3">
+              <p className="text-white text-md text-center">
+                {token0Name?.toString() ?? '...'}{' '}
+                <span className=" text-gray-400">
+                  ({symbolToken0?.toString() ?? '...'})
+                </span>
+              </p>
+              <p className="text-white text-md text-center">
+                {token1Name?.toString() ?? '...'}{' '}
+                <span className=" text-gray-400">
+                  ({symbolToken1?.toString() ?? '...'})
+                </span>
+              </p>
+            </div>
           </div>
 
           {/* Reserves Card */}
-          <div className="flex-1 bg-gradient-to-br from-[#1B002B] to-[#320148] border border-[#AB37FF33] rounded-3xl p-6 shadow-[0_0_30px_#AB37FF33] backdrop-blur-sm transition-all duration-300 text-center">
-            <h2 className="text-purple-500 text-xl font-semibold mb-6">
-              Reserves
+          <div className="bg-gradient-to-br from-[#1B002B] to-[#320148] border border-[#AB37FF33] rounded-3xl p-6 shadow-[0_0_30px_#AB37FF33] backdrop-blur-sm transition-all duration-300 text-center h-full">
+            <h2 className="text-purple-500 text-xl font-semibold mb-3">
+              Pool Reserves
             </h2>
             {reserves ? (
-              <>
-                <p className="text-white font-mono text-lg">
-                  {token0Symbol?.toString() ?? '...'}:{' '}
+              <div className="flex-1 space-y-3">
+                <p className="text-white text-md text-center">
+                  {symbolToken0?.toString() ?? '...'}:{' '}
                   <span className=" text-gray-400">{reserve0Formatted}</span>
                 </p>
-                <p className="text-white font-mono text-lg mt-4">
-                  {token1Symbol?.toString() ?? '...'}:{' '}
+                <p className="text-white text-md text-center">
+                  {symbolToken1?.toString() ?? '...'}:{' '}
                   <span className=" text-gray-400">{reserve1Formatted}</span>
                 </p>
-              </>
+              </div>
             ) : (
               <p className="text-white/70">Loading reserves...</p>
             )}
           </div>
 
-          {/* User Balances Card */}
-          <div className="flex-1 bg-gradient-to-br from-[#1B002B] to-[#320148] border border-[#AB37FF33] rounded-3xl p-6 shadow-[0_0_30px_#AB37FF33] backdrop-blur-sm transition-all duration-300 text-center">
-            <h2 className="text-purple-500 text-xl font-semibold mb-6">
-              Your Balances
+          <div className="bg-gradient-to-br from-[#1B002B] to-[#320148] border border-[#AB37FF33] rounded-3xl p-6 shadow-[0_0_30px_#AB37FF33] backdrop-blur-sm transition-all duration-300 text-center h-full">
+            <h2 className="text-purple-500 text-xl font-semibold mb-3">
+              User Share of Reserves
+            </h2>
+            {reserves ? (
+              <div className="flex-1 space-y-3">
+                <p className="text-white text-md text-center">
+                  {symbolToken0?.toString() ?? '...'}:{' '}
+                  <span className=" text-gray-400">
+                    {userReserve0Formatted}
+                  </span>
+                </p>
+                <p className="text-white text-md text-center">
+                  {symbolToken1?.toString() ?? '...'}:{' '}
+                  <span className=" text-gray-400">
+                    {userReserve1Formatted}
+                  </span>
+                </p>
+              </div>
+            ) : (
+              <p className="text-white/70">Loading reserves...</p>
+            )}
+          </div>
+
+          {/* Token Balances Card */}
+          <div className="bg-gradient-to-br from-[#1B002B] to-[#320148] border border-[#AB37FF33] rounded-3xl p-6 shadow-[0_0_30px_#AB37FF33] backdrop-blur-sm transition-all duration-300 text-center h-full">
+            <h2 className="text-purple-500 text-xl font-semibold mb-3">
+              User Token Balances
             </h2>
             {isConnected ? (
-              <>
-                <p className="text-white text-lg font-medium">
-                  {token0Symbol?.toString() ?? 'Token0'}:{' '}
+              <div className="flex-1 space-y-3">
+                <p className="text-white text-md text-center">
+                  {symbolToken0?.toString() ?? 'Token0'}:{' '}
                   <span className=" text-gray-400">
                     {formattedToken0Balance}
                   </span>
                 </p>
-                <p className="text-white text-lg font-medium mt-4">
-                  {token1Symbol?.toString() ?? 'Token1'}:{' '}
+                <p className="text-white text-md text-center">
+                  {symbolToken1?.toString() ?? 'Token1'}:{' '}
                   <span className=" text-gray-400">
                     {formattedToken1Balance}
                   </span>
                 </p>
-              </>
+              </div>
             ) : (
               <p className="text-white/70 text-sm">
                 Connect your wallet to view balances.
               </p>
             )}
+          </div>
+
+          {/* User Share in Pool */}
+          <div className="flex-1 bg-gradient-to-br from-[#1B002B] to-[#320148] border border-[#AB37FF33] rounded-3xl p-6 shadow-[0_0_30px_#AB37FF33] backdrop-blur-sm transition-all duration-300 text-center h-full lg:col-start-2">
+            <h2 className="text-purple-500 text-xl font-semibold mb-3">
+              Pool Share
+            </h2>
+            <p className="text-white text-2xl font-bold">
+              {(userSharePct! * 100).toFixed(2)}%
+            </p>
           </div>
         </div>
       </div>

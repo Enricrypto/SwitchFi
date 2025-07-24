@@ -1,13 +1,20 @@
-export const SLIPPAGE_PERCENT = 0.5;
+export const defaultSlippagePercent = 0.5;
 
 /**
- * Returns the minimum amount after slippage is applied.
- * Slippage is subtracted (e.g. 0.5% becomes 99.5% of original amount).
+ * Calculate minimum amount after applying slippage.
+ * @param amount - The original amount (bigint)
+ * @param slippagePercent - Slippage percentage (0.5 means 0.5%), optional defaults to defaultSlippagePercent
+ * @returns bigint - minimum acceptable amount after slippage
  */
-export const getSlippageBounds = (amount: bigint): bigint => {
-  const slippageNumerator = BigInt(
-    Math.floor((100 - SLIPPAGE_PERCENT) * 10000)
-  );
-  const slippageDenominator = BigInt(10000 * 100);
-  return (amount * slippageNumerator) / slippageDenominator;
-};
+export function getMinAmountAfterSlippage(
+  amount: bigint,
+  slippagePercent: number = defaultSlippagePercent
+): bigint {
+  // Convert slippagePercent to basis points (bps)
+  const slippageBps = Math.floor(slippagePercent * 100); // e.g. 0.5% -> 50 bps
+
+  const numerator = BigInt(10_000 - slippageBps); // e.g. 10,000 - 50 = 9,950
+  const denominator = BigInt(10_000);
+
+  return (amount * numerator) / denominator;
+}

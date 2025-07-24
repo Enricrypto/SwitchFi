@@ -7,7 +7,6 @@ import UserPoolList from '../../../components/ui/UserPoolList';
 export default function UserPoolsPage() {
   const userPools = usePoolsStore((s) => s.userPools);
   const isLoadingUserPools = usePoolsStore((s) => s.isLoadingUserPools);
-  console.log('UserPoolsPage pools:', userPools);
 
   return (
     <PoolListContainer
