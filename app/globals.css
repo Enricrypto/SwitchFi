@@ -3,8 +3,8 @@
 @tailwind utilities; */
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #000020;
+  --foreground: #ffffff;
 }
 
 @theme inline {
@@ -16,13 +16,125 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #000020;
+    --foreground: #ffffff;
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Primary Button Component */
+.btn-primary {
+  background: linear-gradient(to right, #4691FF, #2669CA);
+  color: white;
+  font-size: 0.875rem; /* text-sm */
+  font-weight: 500; /* font-medium */
+  padding: 0.5rem 1rem; /* px-4 py-2 */
+  border-radius: 0.5rem; /* rounded-lg */
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.btn-primary:hover {
+  opacity: 0.9;
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Primary Button Small Variant */
+.btn-primary-sm {
+  background: linear-gradient(to right, #4691FF, #2669CA);
+  color: white;
+  font-size: 0.875rem; /* text-sm */
+  font-weight: 500; /* font-medium */
+  padding: 0.5rem 0.75rem; /* px-3 py-2 */
+  border-radius: 0.5rem; /* rounded-lg */
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.btn-primary-sm:hover {
+  opacity: 0.9;
+}
+
+.btn-primary-sm:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+/* Secondary Button Component */
+.btn-secondary {
+  font-size: 0.875rem; /* text-sm */
+  font-weight: 600;
+  color: white;
+  padding: 0.5rem 1.25rem; /* py-2 px-5 */
+  border-radius: 9999px; /* pill shape */
+  border: 2px solid transparent;
+  background-image: 
+    linear-gradient(#0B0F1C, #0B0F1C), /* dark background matching the site */
+    linear-gradient(to right, #2E83FF, #1C4F99); /* gradient border */
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+  cursor: pointer;
+}
+
+.btn-secondary:hover {
+  transform: scale(1.03);
+  opacity: 0.9;
+}
+
+.btn-secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.text-gradient-blue {
+  background: linear-gradient(to right, #D5E5FF 0%, #78b3ff 50%, #2F7FF3 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+}
+
+.h2 {
+  font-size: 3.25rem; /* text-4xl */
+  font-weight: 600; /* font-semibold */
+  letter-spacing: -0.025em; /* tracking-tight */
+  color: white;
+}
+
+@media (min-width: 640px) {
+  .subtitle {
+    font-size: 3rem; /* sm:text-5xl */
+  }
+}
+
+.gradient-container {
+  background: linear-gradient(to bottom, #0E0E4F, #09093b 50%, #000020);
+}
+
+.bg-darkblue {
+  background-color: #000020 !important;
+}
+
+.bg-lightblue {
+  background-color: #2561BD !important;
+}
+
+/* Gradient Border Component */
+.gradient-border {
+  border: 2px solid transparent;
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  background-image: 
+    linear-gradient(#050530, #050532), /* dark background matching the site */
+    linear-gradient(to bottom, #4691FF, #2669CA); /* lighter gradient border */
 }

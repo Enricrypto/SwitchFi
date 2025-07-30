@@ -1,4 +1,6 @@
-module.exports = {
+const withMT = require("@material-tailwind/react/utils/withMT");
+
+module.exports = withMT({
   content: [
     './app/**/*.{js,ts,jsx,tsx}',
     './src/**/*.{js,ts,jsx,tsx}',
@@ -8,6 +10,9 @@ module.exports = {
   safelist: ['bg-weird-lime', 'text-weird-purple'], // if weird is top-level
   theme: {
     extend: {
+      screens: {
+        'xs': '475px',
+      },
       colors: {
         cosmic: {
           bg: '#120023',
@@ -28,4 +33,4 @@ module.exports = {
     },
   },
   plugins: [],
-};
+});
