@@ -13,10 +13,9 @@ import { useAccount, useReadContract } from 'wagmi';
 import { formatUnits } from 'viem/utils';
 import { quote } from '../../utils/liquidityCalculations';
 import { AddLiquidityModalProps } from '../../types/interfaces';
-import { SwapSettings } from '../ui/SwapSettings';
+import { SwapSettingsModal } from '../modals/SwapSettings';
 import Spinner from '../ui/Spinner';
-import { Settings } from 'lucide-react';
-import { PlusCircle } from 'lucide-react';
+import { Settings, PlusCircle } from 'lucide-react';
 import BigNumber from 'bignumber.js';
 
 const AddLiquidityModal = ({
@@ -36,19 +35,17 @@ const AddLiquidityModal = ({
   price0,
   price1,
 }: AddLiquidityModalProps) => {
+  // ───── Connected user address ─────
   const { address: userAddress } = useAccount();
 
-  /** ----------------------- State ----------------------- */
+  // ───── Local state for input amounts and UI ─────
+  const [amountA, setAmountA] = useState('');
+  const [amountB, setAmountB] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [slippage, setSlippage] = useState(0.5);
+  const [showSlippageSettings, setShowSlippageSettings] = useState(false);
 
-  const [amountA, setAmountA] = useState(''); // user input for token A
-  const [amountB, setAmountB] = useState(''); // user input for token B
-  const [isSubmitting, setIsSubmitting] = useState(false); // tracks form submission
-  const [slippage, setSlippage] = useState(0.5); // default slippage 0.5%
-  const [showSlippageSettings, setShowSlippageSettings] = useState(false); // toggle slippage panel
-
-  /** ----------------------- Read User Balances ----------------------- */
-
-  // Read the balance of token0 for the connected user
+  // ───── Fetch token balances for the connected user ─────
   const { data: tokenABalance } = useReadContract({
     address: token0,
     abi: ERC20Abi,
@@ -56,7 +53,6 @@ const AddLiquidityModal = ({
     args: [userAddress as `0x${string}`],
   });
 
-  // Read the balance of token1 for the connected user
   const { data: tokenBBalance } = useReadContract({
     address: token1,
     abi: ERC20Abi,
@@ -64,34 +60,30 @@ const AddLiquidityModal = ({
     args: [userAddress as `0x${string}`],
   });
 
-  /** ----------------------- Handle Input Changes ----------------------- */
-
-  // When the user updates amount for token A
+  /** Handle changes for token A input */
   const handleAmountAChange = (value: string) => {
     setAmountA(value);
     if (liquidityWarning) setLiquidityWarning(null);
 
     const numericValue = parseFloat(value);
     if (!value || isNaN(numericValue) || numericValue <= 0) {
+      // Reset B if invalid input
       setAmountB('');
       return;
     }
 
     try {
-      // Convert to base units
+      // Convert input to raw units (BigInt)
       const amountADesired = BigInt(
         (numericValue * 10 ** decimals0!).toFixed(0)
       );
       let amountBOptimal: bigint = BigInt(0);
 
-      // Calculate optimal token B amount using reserves or prices
-      // When reserves exist in the pool (reserveA > 0 && reserveB > 0), you call
-      // quote(amountIn, reserveIn, reserveOut) to maintain the pool ratio.
-      // When reserves are empty (new pool or no liquidity), you fall back to USD prices
-      // (price0 and price1) to calculate the equivalent amount of the other token.
+      // Calculate optimal token B amount based on reserves or prices
       if (reserveA > BigInt(0) && reserveB > BigInt(0)) {
         amountBOptimal = quote(amountADesired, reserveA, reserveB);
       } else if (price0 && price1) {
+        // Fallback: use token prices to approximate amount B
         const usdValue = numericValue * price0;
         const tokenBAmount = usdValue / price1;
         amountBOptimal = BigInt((tokenBAmount * 10 ** decimals1!).toFixed(0));
@@ -106,10 +98,11 @@ const AddLiquidityModal = ({
         return;
       }
 
-      // Format for display
+      // Format optimal amount B to decimal string for display
       const formattedAmountB = new BigNumber(amountBOptimal.toString())
         .dividedBy(new BigNumber(10).pow(decimals1!))
         .toFixed();
+
       setAmountB(formattedAmountB);
     } catch (error) {
       console.error('Error calculating amountB:', error);
@@ -118,7 +111,7 @@ const AddLiquidityModal = ({
     }
   };
 
-  // When the user updates amount for token B
+  /** Handle changes for token B input (similar logic, reversed) */
   const handleAmountBChange = (value: string) => {
     setAmountB(value);
     if (liquidityWarning) setLiquidityWarning(null);
@@ -137,7 +130,6 @@ const AddLiquidityModal = ({
       );
       let amountAOptimal: bigint = BigInt(0);
 
-      // Calculate optimal token A amount
       if (reserveA > BigInt(0) && reserveB > BigInt(0)) {
         amountAOptimal = quote(amountBDesired, reserveB, reserveA);
       } else if (price0 && price1) {
@@ -160,8 +152,9 @@ const AddLiquidityModal = ({
       }
 
       const formattedAmountA = new BigNumber(amountAOptimal.toString())
-        .dividedBy(new BigNumber(10).pow(decimals1!))
+        .dividedBy(new BigNumber(10).pow(decimals0!)) // corrected decimals here
         .toFixed();
+
       setAmountA(formattedAmountA);
     } catch (error) {
       console.error('Error calculating amountA:', error);
@@ -170,9 +163,7 @@ const AddLiquidityModal = ({
     }
   };
 
-  /** ----------------------- Handle MAX Buttons ----------------------- */
-
-  // Max button for token A: fill max available token A and calculate required token B
+  /** Handle clicking MAX for token A balance */
   const handleMaxA = () => {
     if (!tokenABalance || !decimals0 || !decimals1 || (!price0 && !reserveA))
       return;
@@ -193,11 +184,11 @@ const AddLiquidityModal = ({
       amountBOptimal = usdValue.dividedBy(price1);
     }
 
-    // Ensure user also has enough token B
     const maxTokenB = new BigNumber(
       formatUnits(tokenBBalance ?? BigInt(0), decimals1)
     );
     if (amountBOptimal.gt(maxTokenB)) {
+      // Adjust amounts to max balances if token B is limiting
       if (!price0 || !price1) return;
       const usdB = maxTokenB.multipliedBy(price1);
       const adjustedTokenA = usdB.dividedBy(price0);
@@ -210,7 +201,7 @@ const AddLiquidityModal = ({
     }
   };
 
-  // Max button for token B: fill max available token B and calculate required token A
+  /** Handle clicking MAX for token B balance */
   const handleMaxB = () => {
     if (!tokenBBalance || !decimals0 || !decimals1 || (!price1 && !reserveB))
       return;
@@ -247,46 +238,40 @@ const AddLiquidityModal = ({
     }
   };
 
-  /** ----------------------- Format Balances for Display ----------------------- */
-
+  // ───── Format balances for UI display ─────
   const formattedTokenABalance = tokenABalance
-    ? formatUnits(tokenABalance, decimals0 ?? 18)
-    : 0;
-  const formattedTokenBBalance = tokenBBalance
-    ? formatUnits(tokenBBalance, decimals1 ?? 18)
-    : 0;
+    ? parseFloat(formatUnits(tokenABalance, decimals0 ?? 18)).toFixed(2)
+    : '0.00';
 
-  // Validation helpers
+  const formattedTokenBBalance = tokenBBalance
+    ? parseFloat(formatUnits(tokenBBalance, decimals1 ?? 18)).toFixed(2)
+    : '0.00';
+
+  // ───── Validation: Check if inputs exceed balances or are invalid ─────
   const exceedsBalanceA =
-    parseFloat(amountA || '0') > parseFloat(formattedTokenABalance.toString());
+    parseFloat(amountA || '0') > parseFloat(formattedTokenABalance);
   const exceedsBalanceB =
-    parseFloat(amountB || '0') > parseFloat(formattedTokenBBalance.toString());
+    parseFloat(amountB || '0') > parseFloat(formattedTokenBBalance);
   const isAmountAInvalid = amountA === '' || parseFloat(amountA) <= 0;
   const isAmountBInvalid = amountB === '' || parseFloat(amountB) <= 0;
 
-  /** ----------------------- Handle Add Liquidity Submit ----------------------- */
-
+  /** Handle submitting the add liquidity action */
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
       const success = await handleAddLiquidity(amountA, amountB);
-      if (success) {
-        onClose(); // Close modal on success
-      }
+      if (success) onClose();
     } catch (error) {
       console.error('Add liquidity failed:', error);
-      // Optional: notify user of failure
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  /** ----------------------- Modal UI ----------------------- */
-
   return (
     <Transition show={isOpen} as={Fragment}>
       <Dialog as="div" className="relative z-50" onClose={onClose}>
-        {/* Backdrop transition */}
+        {/* Backdrop with fade */}
         <TransitionChild
           as={Fragment}
           enter="ease-out duration-300"
@@ -296,13 +281,12 @@ const AddLiquidityModal = ({
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          {/* Dark semi-transparent overlay behind the modal */}
-          <div className="fixed inset-0 bg-black bg-opacity-60 transition-opacity" />
+          <div className="fixed inset-0 bg-black/30 backdrop-blur-md" />
         </TransitionChild>
 
+        {/* Modal container centered */}
         <div className="fixed inset-0 z-50 overflow-y-auto">
           <div className="flex min-h-full items-center justify-center p-4 text-center">
-            {/* Modal panel transition */}
             <TransitionChild
               as={Fragment}
               enter="ease-out duration-300"
@@ -312,13 +296,12 @@ const AddLiquidityModal = ({
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              {/* Modal content container */}
-              <DialogPanel className="w-full max-w-md transform overflow-hidden rounded-3xl bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 backdrop-blur-md border border-white/10 p-8 text-left align-middle shadow-2xl transition-all text-white">
+              <DialogPanel className="w-full max-w-md rounded-2xl bg-[#1a002c] p-6 text-white shadow-xl border border-purple-900">
+                {/* Header with title and settings button */}
                 <div className="flex items-center justify-between gap-2">
-                  <DialogTitle className="flex items-center gap-2 text-xl font-semibold">
+                  <DialogTitle className="text-lg font-semibold text-purple-300 mb-4">
                     Add Liquidity
                   </DialogTitle>
-
                   <button
                     type="button"
                     aria-label="Toggle slippage tolerance settings"
@@ -327,21 +310,23 @@ const AddLiquidityModal = ({
                     }
                     className="p-1 rounded hover:bg-gray-700 transition cursor-pointer"
                   >
-                    <Settings className="w-6 h-6 text-grey-800 pb-1" />
+                    <Settings className="w-6 h-6 text-gray-300 pb-1" />
                   </button>
                 </div>
 
-                {/* Render full SwapSettings UI panel if toggled */}
+                {/* Show Slippage Settings modal overlay */}
                 {showSlippageSettings && (
-                  <div className="p-1 mb-4">
-                    <SwapSettings
+                  <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                    <SwapSettingsModal
+                      isOpen={showSlippageSettings}
+                      onClose={() => setShowSlippageSettings(false)}
                       slippage={slippage}
                       setSlippage={setSlippage}
-                      showSlippage={showSlippageSettings}
                     />
                   </div>
                 )}
 
+                {/* Liquidity warning message */}
                 {liquidityWarning && (
                   <div className="bg-yellow-100 text-yellow-800 p-3 rounded-md mb-4 text-sm">
                     {liquidityWarning}
@@ -350,17 +335,18 @@ const AddLiquidityModal = ({
 
                 {/* Input fields for token amounts */}
                 <div className="space-y-4">
+                  {/* Token A input */}
                   <div>
                     <div className="flex justify-between items-center mb-1">
                       <label htmlFor="amountA" className="text-sm font-medium">
                         Amount {symbolToken0}
                       </label>
-                      <div className="text-xs text-yellow-400">
+                      <div className="mt-2 flex items-center justify-end gap-2 text-xs">
                         Balance: {formattedTokenABalance}{' '}
                         <button
                           type="button"
-                          onClick={() => handleMaxA()}
-                          className="ml-2 px-2 py-0.5 rounded text-gray-400 hover:bg-gray-700 hover:text-gray-200 cursor-pointer select-none"
+                          onClick={handleMaxA}
+                          className="bg-[#320148] border border-purple-400 rounded-full px-2 py-0.5"
                         >
                           MAX
                         </button>
@@ -380,7 +366,7 @@ const AddLiquidityModal = ({
                       onChange={(e) => handleAmountAChange(e.target.value)}
                       placeholder={`Enter amount of ${symbolToken0}`}
                     />
-                    <p className="text-xs text-gray-400 mt-1">
+                    <p className="flex items-center justify-start text-xs text-gray-400 mt-1">
                       ≈ $
                       {(
                         parseFloat(amountA || '0') * (price0 ?? 0)
@@ -390,13 +376,11 @@ const AddLiquidityModal = ({
                       })}{' '}
                       USD
                     </p>
-
                     {amountA !== '' && isAmountAInvalid && !exceedsBalanceA && (
                       <p className="text-xs text-red-500 mt-1">
                         Please enter a valid amount greater than 0.
                       </p>
                     )}
-
                     {amountA !== '' && exceedsBalanceA && (
                       <p className="text-xs text-red-500 mt-1">
                         Amount exceeds available balance.
@@ -404,17 +388,18 @@ const AddLiquidityModal = ({
                     )}
                   </div>
 
+                  {/* Token B input */}
                   <div>
                     <div className="flex justify-between items-center mb-1">
                       <label htmlFor="amountB" className="text-sm font-medium">
                         Amount {symbolToken1}
                       </label>
-                      <div className="text-xs text-yellow-400">
+                      <div className="mt-2 flex items-center justify-end gap-2 text-xs">
                         Balance: {formattedTokenBBalance}{' '}
                         <button
                           type="button"
                           onClick={handleMaxB}
-                          className="ml-2 px-2 py-0.5 rounded text-gray-400 hover:bg-gray-700 hover:text-gray-200 cursor-pointer select-none"
+                          className="bg-[#320148] border border-purple-400 rounded-full px-2 py-0.5"
                         >
                           MAX
                         </button>
@@ -434,10 +419,10 @@ const AddLiquidityModal = ({
                       onChange={(e) => handleAmountBChange(e.target.value)}
                       placeholder={`Enter amount of ${symbolToken1}`}
                     />
-                    <p className="text-xs text-gray-400 mt-1">
+                    <p className="flex items-center justify-start text-xs text-gray-400 mt-1">
                       ≈ $
                       {(
-                        parseFloat(amountB || '0') * (price0 ?? 0)
+                        parseFloat(amountB || '0') * (price1 ?? 0)
                       ).toLocaleString(undefined, {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,
@@ -449,7 +434,6 @@ const AddLiquidityModal = ({
                         Please enter a valid amount greater than 0.
                       </p>
                     )}
-
                     {amountB !== '' && exceedsBalanceB && (
                       <p className="text-xs text-red-500 mt-1">
                         Amount exceeds available balance.
@@ -458,38 +442,38 @@ const AddLiquidityModal = ({
                   </div>
                 </div>
 
-                {/* Action buttons: Cancel and Add Liquidity */}
+                {/* Action buttons */}
                 <div className="mt-6 flex justify-end space-x-3">
                   <button
                     type="button"
-                    className="flex items-center justify-center gap-2 rounded-xl border border-white/10 px-6 py-3 text-base font-semibold text-zinc-300 hover:bg-white/5 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="bg-purple-500 hover:bg-purple-600 transition-colors text-white font-semibold px-6 py-4 rounded-xl shadow-md"
                     onClick={onClose}
                     disabled={isSubmitting}
                   >
                     Cancel
                   </button>
-                  <div>
-                    <button
-                      type="button"
-                      className="flex items-center justify-center gap-2 rounded-xl bg-purple-600 hover:bg-purple-700 px-6 py-3 text-base font-semibold text-white transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                      onClick={handleSubmit}
-                      disabled={
-                        isSubmitting ||
-                        exceedsBalanceA ||
-                        exceedsBalanceB ||
-                        isAmountAInvalid ||
-                        isAmountBInvalid
-                      }
-                    >
-                      {isSubmitting && <Spinner />}
-                      {!isSubmitting && (
-                        <>
-                          Add Liquidity
-                          <PlusCircle className="w-5 h-5" />
-                        </>
-                      )}
-                    </button>
-                  </div>
+
+                  <button
+                    type="button"
+                    className="flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-semibold px-6 py-4 rounded-xl shadow-md"
+                    onClick={handleSubmit}
+                    disabled={
+                      isSubmitting ||
+                      exceedsBalanceA ||
+                      exceedsBalanceB ||
+                      isAmountAInvalid ||
+                      isAmountBInvalid
+                    }
+                  >
+                    {isSubmitting ? (
+                      <Spinner />
+                    ) : (
+                      <>
+                        Add Liquidity
+                        <PlusCircle className="w-5 h-5" />
+                      </>
+                    )}
+                  </button>
                 </div>
               </DialogPanel>
             </TransitionChild>

@@ -1,6 +1,7 @@
 export interface Token {
-  symbol?: string;
   address: `0x${string}`;
+  symbol: string;
+  decimals: number;
 }
 
 export interface Pool {
@@ -38,7 +39,6 @@ export interface ButtonProps {
   loading?: boolean;
 }
 
-// Mint panel props (if you later extract it)
 export interface MintTokenPanelProps {
   token: Token;
   amount: string;
@@ -94,4 +94,69 @@ export interface PoolListContainerProps {
   isLoading?: boolean;
   ListComponent: React.ComponentType<PoolListProps & { isLoading: boolean }>;
   fetchOnMount?: boolean;
+}
+
+interface NormalSwapParams {
+  reverse?: false;
+  amountIn: bigint;
+  amountOut?: never;
+  reserveIn: bigint;
+  reserveOut: bigint;
+  slippageBps?: number;
+}
+
+interface ReverseSwapParams {
+  reverse: true;
+  amountIn?: never;
+  amountOut: bigint;
+  reserveIn: bigint;
+  reserveOut: bigint;
+  slippageBps?: number;
+}
+
+export type SwapPreviewParams = NormalSwapParams | ReverseSwapParams;
+
+export type SwapPreviewResult = {
+  amountOut: bigint;
+  minAmountOut: bigint;
+  loading: boolean;
+  error: string | null;
+};
+
+export interface TokenSelectorProps {
+  token?: Token;
+  onSelect: (token: Token) => void;
+}
+
+export interface AmountInputProps {
+  value: string;
+  onChange: (value: string) => void;
+}
+
+export interface TokenInfo {
+  address: string;
+  name: string;
+  symbol: string;
+  decimals: number;
+  logoURI: string;
+  chainId: number;
+}
+
+export interface TokenListState {
+  tokenList: TokenInfo[];
+  isLoading: boolean;
+  error?: string;
+  fetchTokenList: () => Promise<void>;
+}
+
+export interface SwapFormProps {
+  slippagePercent: number;
+  onToggleSettings: () => void;
+}
+
+export interface SwapSettingsModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  slippage: number;
+  setSlippage: (val: number) => void;
 }

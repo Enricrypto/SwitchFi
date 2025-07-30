@@ -68,9 +68,9 @@ const PairAddress = ({
     );
   }
 
-  /** ------------------ Render pool card UI ------------------ */
+  /** ------------------ Render pool card UI with consistent styling ------------------ */
   return (
-    <div className="bg-gradient-to-br from-[#1B002B] to-[#320148] border border-[#AB37FF33] rounded-3xl p-6 shadow-[0_0_30px_#AB37FF33] backdrop-blur-sm transition-all duration-300 h-full flex flex-col">
+    <div className="min-h-[380px] flex flex-col bg-white/5 rounded-3xl border border-[#AB37FF33] shadow-[0_0_40px_#AB37FF33] backdrop-blur-xl p-6 text-white font-sans transition-all duration-300">
       <div className="flex-grow flex flex-col">
         {/* ------------------ Token icons + symbols ------------------ */}
         <div className="flex items-center justify-center gap-6 mb-6">
@@ -147,8 +147,7 @@ const PairAddress = ({
               </span>
             </p>
             <p className="text-sm text-purple-300">
-              LP Balance: {''}
-              <span>{formattedBalanceLP}</span>
+              LP Balance: <span>{formattedBalanceLP}</span>
             </p>
           </div>
         )}

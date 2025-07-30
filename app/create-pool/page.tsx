@@ -16,33 +16,28 @@ import {
   factoryABI,
   tokenList,
 } from '@/constants';
+import TokenSelector from '../../components/ui/TokenSelector';
 import Header from '../../components/ui/Header';
 import Spinner from '../../components/ui/Spinner';
 import MintToken from '../../components/ui/MintToken';
 import { toast } from 'react-toastify';
 
 const CreatePoolPage = () => {
-  /** ------------------ Wallet Connection Status ------------------ */
   const { isConnected } = useAccount();
   const router = useRouter();
 
-  /** ------------------ Token Selection State ------------------ */
-  // Track selected tokens (default to first two tokens in tokenList)
+  // ───── Token Selection State ─────
   const [tokenA, setTokenA] = useState<`0x${string}`>(tokenList[0].address);
   const [tokenASelected, setTokenASelected] = useState(false);
 
   const [tokenB, setTokenB] = useState<`0x${string}`>(tokenList[1].address);
   const [tokenBSelected, setTokenBSelected] = useState(false);
 
-  /** ------------------ Pool Existence & Error State ------------------ */
-  // Whether the pool for selected tokens already exists
+  // ───── Pool State ─────
   const [poolExists, setPoolExists] = useState(false);
-
-  // Track local errors related to transaction or UI
   const [localError, setLocalError] = useState<BaseError | null>(null);
 
-  /** ------------------ Simulate createPair Contract Call ------------------ */
-  // Used to validate and prepare transaction data for pool creation
+  // ───── Simulate contract write (to get calldata) ─────
   const { data } = useSimulateContract({
     address: factoryAddress,
     abi: factoryABI,
@@ -50,19 +45,14 @@ const CreatePoolPage = () => {
     args: [tokenA, tokenB],
   });
 
-  /** ------------------ Write Contract Hook ------------------ */
-  // Provides method to send the transaction and tracks status/error
+  // ───── Execute contract write ─────
   const { data: hash, error, writeContract, isPending } = useWriteContract();
 
-  /** ------------------ Wait for Transaction Confirmation ------------------ */
-  // Watches transaction hash and updates confirmation status
+  // ───── Track transaction confirmation status ─────
   const { isLoading: isConfirming, isSuccess: isConfirmed } =
-    useWaitForTransactionReceipt({
-      hash,
-    });
+    useWaitForTransactionReceipt({ hash });
 
-  /** ------------------ Read Current Pool Address ------------------ */
-  // Query factory contract to get pair address for selected tokens
+  // ───── Fetch existing pool address (if any) ─────
   const {
     data: poolAddress,
     isLoading: isPoolLoading,
@@ -74,9 +64,8 @@ const CreatePoolPage = () => {
     args: [tokenA, tokenB],
   });
 
-  /** ------------------ Update Pool Existence State ------------------ */
+  // ───── Check if pool exists ─────
   useEffect(() => {
-    // Pool exists if address is valid and not zero address
     if (poolAddress && poolAddress !== zeroAddress) {
       setPoolExists(true);
     } else {
@@ -84,30 +73,27 @@ const CreatePoolPage = () => {
     }
   }, [poolAddress]);
 
-  /** ------------------ Refetch Pool Address After Confirmation ------------------ */
-  // After transaction confirmed, re-query pool address to get updated state
+  // ───── Refetch pool address on confirmation ─────
   useEffect(() => {
     if (isConfirmed) {
       refetchPoolAddress();
     }
   }, [isConfirmed, refetchPoolAddress]);
 
-  /** ------------------ Show Success Toast and Redirect After Creation ------------------ */
+  // ───── Navigate after pool is confirmed and exists ─────
   useEffect(() => {
-    // Show success toast and navigate to new pool page after confirmation
     if (isConfirmed && poolAddress && poolAddress !== zeroAddress) {
       toast.success('Pool created successfully!');
       router.push(`/pool/${poolAddress}`);
     }
   }, [isConfirmed, poolAddress, router]);
 
-  /** ------------------ Handle Transaction Errors with Toasts ------------------ */
+  // ───── Handle transaction errors ─────
   useEffect(() => {
     if (!error) return;
 
     const message = error instanceof Error ? error.message.toLowerCase() : '';
 
-    // Show different error messages based on error type/content
     if (
       message.includes('user denied') ||
       message.includes('cancel') ||
@@ -121,16 +107,16 @@ const CreatePoolPage = () => {
     } else {
       toast.error('Unknown error occurred');
     }
+
     setLocalError(error as BaseError);
   }, [error]);
 
-  /** ------------------ Clear Errors When Tokens Change ------------------ */
-  // Reset local error state when user selects new tokens
+  // ───── Clear local error when tokens change ─────
   useEffect(() => {
     setLocalError(null);
   }, [tokenA, tokenB]);
 
-  /** ------------------ Handle Create Pool Button Click ------------------ */
+  // ───── Main action: Create pool ─────
   const handleCreatePool = () => {
     if (!isConnected) {
       toast.error('Please connect your wallet');
@@ -144,7 +130,7 @@ const CreatePoolPage = () => {
 
     if (poolExists) {
       toast.error('Pool already exists!');
-      return; // stop the function, do not create new pool
+      return;
     }
 
     if (!data?.request) {
@@ -152,84 +138,59 @@ const CreatePoolPage = () => {
       return;
     }
 
-    // Send the createPair transaction using prepared request data
     writeContract(data.request);
     toast.info('Transaction sent. Waiting for confirmation...');
   };
 
-  /** ------------------ JSX Render ------------------ */
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#120023] via-[#1B002B] to-[#2B003D] text-white font-sans">
       <Header />
 
       <div className="flex items-center justify-center p-6 mt-18">
-        <div className="w-full max-w-md p-8 rounded-3xl backdrop-blur-xl bg-white/5 border border-[#AB37FF33] shadow-[0_0_40px_#AB37FF33] space-y-6 transition-all duration-300">
-          <h1 className="text-3xl font-bold text-center text-white tracking-wide drop-shadow-[0_0_10px_#AB37FFAA]">
+        <div className="w-full max-w-md p-8 rounded-lg bg-[#2A0040] border border-[#AB37FF33] shadow-[0_0_40px_#AB37FF33] space-y-6 transition-all duration-300">
+          <h1 className="text-2xl font-bold text-center text-white tracking-wide drop-shadow-[0_0_10px_#AB37FFAA]">
             Create a Pool
           </h1>
 
-          {/* ------------------ Token Selectors ------------------ */}
-          <div className="grid grid-cols-2 gap-4">
+          {/* Token Selectors */}
+          <div className="grid grid-cols-2 gap-6 justify-items-center">
             <div>
-              <label className="block text-sm mb-1 text-white/70">
-                Token A
-              </label>
-              <select
-                className="w-full px-3 py-2 rounded-xl bg-white/10 text-white border border-[#AB37FF33] focus:outline-none focus:ring-2 focus:ring-[#AB37FF66] transition"
-                value={tokenASelected ? tokenA : ''}
-                onChange={(e) => {
-                  setTokenA(e.target.value as `0x${string}`);
+              <TokenSelector
+                token={tokenList.find((t) => t.address === tokenA) || undefined}
+                tokens={tokenList.filter((t) => t.address !== tokenB)}
+                onSelect={(token) => {
+                  setTokenA(token.address);
                   setTokenASelected(true);
                 }}
-              >
-                <option value="">Select Token A</option>
-                {tokenList
-                  .filter((token) => token.address !== tokenB)
-                  .map((token) => (
-                    <option key={token.address} value={token.address}>
-                      {token.symbol}
-                    </option>
-                  ))}
-              </select>
+              />
             </div>
 
             <div>
-              <label className="block text-sm mb-1 text-white/70">
-                Token B
-              </label>
-              <select
-                className="w-full px-3 py-2 rounded-xl bg-white/10 text-white border border-[#AB37FF33] focus:outline-none focus:ring-2 focus:ring-[#AB37FF66] transition"
-                value={tokenBSelected ? tokenB : ''}
-                onChange={(e) => {
-                  setTokenB(e.target.value as `0x${string}`);
+              <TokenSelector
+                token={tokenList.find((t) => t.address === tokenB) || undefined}
+                tokens={tokenList.filter((t) => t.address !== tokenA)}
+                onSelect={(token) => {
+                  setTokenB(token.address);
                   setTokenBSelected(true);
                 }}
-              >
-                <option value="">Select Token B</option>
-                {tokenList
-                  .filter((token) => token.address !== tokenA)
-                  .map((token) => (
-                    <option key={token.address} value={token.address}>
-                      {token.symbol}
-                    </option>
-                  ))}
-              </select>
+              />
             </div>
           </div>
 
-          {/* ------------------ Create Pool Button ------------------ */}
+          {/* Create Pool Button */}
           <button
             onClick={handleCreatePool}
             className={`w-full py-3 px-6 rounded-full font-semibold flex justify-center items-center gap-2 transition-all duration-200 ${
               isPending || isConfirming
                 ? 'bg-[#451063] opacity-60 cursor-not-allowed'
-                : 'bg-[#AB37FF] hover:bg-[#C155FF]'
+                : 'bg-purple-600 hover:bg-purple-700'
             } shadow-[0_0_20px_#AB37FF88]`}
+            disabled={isPending || isConfirming}
           >
             {isPending || isConfirming ? <Spinner /> : 'Create Pool'}
           </button>
 
-          {/* ------------------ Status Messages ------------------ */}
+          {/* Status Messages */}
           <div className="space-y-2 text-sm">
             {isPoolLoading && (
               <div className="text-yellow-400 animate-pulse">
@@ -238,18 +199,18 @@ const CreatePoolPage = () => {
             )}
 
             {poolExists && tokenASelected && tokenBSelected && (
-              <div className="text-red-400">
+              <div className="text-red-400 break-words">
                 Pool already exists at:
-                <span className="block break-all mt-1 opacity-80">
+                <span className="block mt-1 opacity-80">
                   {String(poolAddress)}
                 </span>
               </div>
             )}
 
             {hash && (
-              <div className="p-3 rounded-xl bg-blue-900/30 text-blue-300 border border-blue-500">
+              <div className="p-3 rounded-xl bg-blue-900/30 text-blue-300 border border-blue-500 break-words">
                 Transaction sent. Hash:
-                <div className="break-all mt-1">{hash}</div>
+                <div className="mt-1">{hash}</div>
               </div>
             )}
 
@@ -268,7 +229,7 @@ const CreatePoolPage = () => {
             )}
           </div>
 
-          {/* ------------------ Optional: Mint Component ------------------ */}
+          {/* Optional Mint Token */}
           <div className="pt-4 border-t border-white/10">
             <MintToken />
           </div>
