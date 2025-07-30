@@ -8,6 +8,7 @@ const UserPoolList = ({
   onAddLiquidityClick,
   onRemoveLiquidityClick,
 }: PoolListProps & { isLoading: boolean }) => {
+  // ───── Show loading spinner and message while fetching pools ─────
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center h-64 text-gray-400">
@@ -17,6 +18,7 @@ const UserPoolList = ({
     );
   }
 
+  // ───── Show message when no pools are found for the user ─────
   if (!pools.length) {
     return (
       <div className="flex flex-col items-center justify-center h-64 text-gray-400">
@@ -26,6 +28,7 @@ const UserPoolList = ({
     );
   }
 
+  // ───── Render grid of user pools with add/remove liquidity handlers ─────
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-6 m-16">
       {pools.map((pool) => (

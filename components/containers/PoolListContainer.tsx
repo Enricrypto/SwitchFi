@@ -28,22 +28,26 @@ const PoolListContainer = ({
 }: PoolListContainerProps) => {
   const { writeContractAsync } = useWriteContract();
 
-  // Access pool-related state and actions from the global store
+  // Zustand store hooks to access global pool data and fetching methods
   const fetchAllPools = usePoolsStore((state) => state.fetchAllPools);
   const fetchUserPools = usePoolsStore((state) => state.fetchUserPools);
   const isLoadingAllPools = usePoolsStore((state) => state.isLoadingAllPools);
   const allPools = usePoolsStore((state) => state.allPools);
   const userPools = usePoolsStore((state) => state.userPools);
 
+  // Get wallet address and connection status from Wagmi
   const { address: userAddress, isConnected } = useAccount();
+
+  // Public client to read blockchain data (Arbitrum network)
   const publicClient = usePublicClient({ chainId: arbitrum.id });
 
+  // Local component state to track selected pair and modal visibility
   const [selectedPair, setSelectedPair] = useState<`0x${string}` | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isRemoveModalOpen, setIsRemoveModalOpen] = useState(false);
   const [liquidityWarning, setLiquidityWarning] = useState<string | null>(null);
 
-  // Get the currently selected pool from userPools or allPools
+  // Find the currently selected pool from user pools or all pools by matching pairAddress
   const selectedPool =
     userPools.find(
       (p) => p.pairAddress.toLowerCase() === selectedPair?.toLowerCase()
@@ -52,7 +56,8 @@ const PoolListContainer = ({
       (p) => p.pairAddress.toLowerCase() === selectedPair?.toLowerCase()
     );
 
-  // Fetch pools when component mounts, user connects, and fetchOnMount flag is true
+  // Effect to fetch all pools and user pools on mount or when connection/user changes,
+  // but only if fetchOnMount flag is true
   useEffect(() => {
     if (!fetchOnMount) return;
     if (!publicClient || !isConnected || !userAddress) return;
@@ -72,6 +77,7 @@ const PoolListContainer = ({
     amountToken0Desired: string,
     amountToken1Desired: string
   ): Promise<boolean> => {
+    // Ensure wallet connected, public client and selected pair are ready
     if (!userAddress) {
       console.error('Wallet not connected');
       return false;
@@ -97,6 +103,7 @@ const PoolListContainer = ({
         symbolToken1,
       } = selectedPool;
 
+      // Check if necessary data is loaded before proceeding
       if (
         decimals0 === null ||
         decimals1 === null ||
@@ -110,7 +117,7 @@ const PoolListContainer = ({
         return false;
       }
 
-      // Fetch current token allowances if not already available
+      // Fetch current token allowances if not provided in the pool state
       const finalAllowance0 =
         allowanceToken0 ??
         (await publicClient.readContract({
@@ -129,7 +136,7 @@ const PoolListContainer = ({
           args: [userAddress, routerAddress],
         }));
 
-      // Parse user inputs and validate
+      // Validate that at least one token input is provided and valid
       const hasInput0 = amountToken0Desired.trim() !== '';
       const hasInput1 = amountToken1Desired.trim() !== '';
 
@@ -149,11 +156,11 @@ const PoolListContainer = ({
         return false;
       }
 
-      // Convert input amounts to raw units based on decimals
+      // Convert user inputs to raw units considering token decimals
       const parsedAmount0 = parseUnits(inputAmount0.toString(), decimals0);
       const parsedAmount1 = parseUnits(inputAmount1.toString(), decimals1);
 
-      // Validate amounts against pool reserves to maintain ratio
+      // Validate the amounts against pool reserves to maintain the correct ratio
       const optimalAmounts = validateOptimalAmounts(
         parsedAmount0,
         parsedAmount1,
@@ -163,6 +170,7 @@ const PoolListContainer = ({
         reserves[1]
       );
 
+      // If ratio validation fails, show warning and abort
       if (!optimalAmounts) {
         setLiquidityWarning(
           'The token amounts are too imbalanced to maintain the pool ratio. Please adjust them.'
@@ -170,15 +178,16 @@ const PoolListContainer = ({
         return false;
       }
 
+      // Clear any existing warning once inputs are valid
       setLiquidityWarning(null);
 
       const [finalParsed0, finalParsed1] = optimalAmounts;
 
-      // Calculate minimum amounts considering slippage tolerance
+      // Calculate minimum acceptable amounts factoring in slippage tolerance
       const amount0Min = getMinAmountAfterSlippage(finalParsed0);
       const amount1Min = getMinAmountAfterSlippage(finalParsed1);
 
-      // Approve tokens for router if allowance is insufficient
+      // Approve tokens for router contract if current allowance is insufficient
       await approveIfNeeded(
         token0,
         finalAllowance0,
@@ -194,7 +203,7 @@ const PoolListContainer = ({
         routerAddress
       );
 
-      // Execute addLiquidity on-chain
+      // Execute addLiquidity transaction on-chain
       const txHash = await writeContractAsync({
         address: routerAddress,
         abi: routerABI,
@@ -210,10 +219,10 @@ const PoolListContainer = ({
         ],
       });
 
-      // Wait for transaction confirmation
+      // Wait for transaction to be confirmed
       await publicClient.waitForTransactionReceipt({ hash: txHash });
 
-      // Refresh pool data after adding liquidity
+      // Refresh pools state after liquidity addition
       await fetchAllPools(publicClient);
       await fetchUserPools(userAddress, publicClient);
 
@@ -242,6 +251,8 @@ const PoolListContainer = ({
       balanceLP,
       lpDecimals,
     } = selectedPool;
+
+    // Validate that all required data is present before proceeding
     if (
       !userAddress ||
       !selectedPair ||
@@ -257,13 +268,13 @@ const PoolListContainer = ({
     }
 
     try {
-      // Determine decimals for LP tokens
+      // Determine LP token decimals or default to 18
       const decimalsLP = lpDecimals ?? 18;
 
-      // Parse input liquidity amount to raw units
+      // Convert input liquidity amount to raw units
       const parsedLiquidityAmount = parseUnits(liquidityAmount, decimalsLP);
 
-      // Ensure user has enough LP tokens
+      // Check user's LP token balance is loaded and sufficient
       if (balanceLP === undefined) {
         console.error('LP balance not loaded yet');
         return false;
@@ -273,7 +284,7 @@ const PoolListContainer = ({
         return false;
       }
 
-      // Calculate expected token amounts to be withdrawn from pool
+      // Calculate expected amounts of tokens to be withdrawn from the pool
       const [reserve0, reserve1] = reserves;
       const expectedAmount0 =
         (reserve0 * parsedLiquidityAmount) / lpTotalSupply;
@@ -284,7 +295,7 @@ const PoolListContainer = ({
       const amount0Min = getMinAmountAfterSlippage(expectedAmount0);
       const amount1Min = getMinAmountAfterSlippage(expectedAmount1);
 
-      // Fetch allowance of LP tokens for router
+      // Fetch current allowance of LP tokens for router contract
       const allowanceLP: bigint = await publicClient!.readContract({
         address: selectedPair,
         abi: ERC20Abi,
@@ -292,7 +303,7 @@ const PoolListContainer = ({
         args: [userAddress, routerAddress],
       });
 
-      // Approve LP tokens if allowance insufficient
+      // Approve LP tokens if allowance is insufficient for removal
       if (allowanceLP < parsedLiquidityAmount) {
         try {
           const txHash = await writeContractAsync({
@@ -302,6 +313,7 @@ const PoolListContainer = ({
             args: [routerAddress, MAX_UINT256],
           });
 
+          // Wait for approval transaction confirmation
           await publicClient!.waitForTransactionReceipt({ hash: txHash });
         } catch (error) {
           console.error('LP token approval failed:', error);
@@ -309,7 +321,7 @@ const PoolListContainer = ({
         }
       }
 
-      // Execute removeLiquidity on-chain
+      // Execute removeLiquidity transaction on-chain
       const txHash = await writeContractAsync({
         address: routerAddress,
         abi: routerABI,
@@ -324,10 +336,10 @@ const PoolListContainer = ({
         ],
       });
 
-      // Wait for transaction confirmation
+      // Wait for transaction to be confirmed
       await publicClient.waitForTransactionReceipt({ hash: txHash });
 
-      // Refresh pools data after removal
+      // Refresh pools state after liquidity removal
       await fetchAllPools(publicClient);
       await fetchUserPools(userAddress, publicClient);
 
@@ -338,31 +350,32 @@ const PoolListContainer = ({
     }
   };
 
-  // Open Add Liquidity modal with selected pair
+  // Opens Add Liquidity modal and sets the selected pair
   const onAddLiquidityClick = (pairAddress: `0x${string}`) => {
     setSelectedPair(pairAddress);
     setIsAddModalOpen(true);
   };
 
-  // Open Remove Liquidity modal with selected pair
+  // Opens Remove Liquidity modal and sets the selected pair
   const onRemoveLiquidityClick = (pairAddress: `0x${string}`) => {
     setSelectedPair(pairAddress);
     setIsRemoveModalOpen(true);
   };
 
-  // Close Add Liquidity modal and reset state
+  // Closes Add Liquidity modal and clears selected pair and warnings
   const closeAddModal = () => {
     setLiquidityWarning(null);
     setIsAddModalOpen(false);
     setSelectedPair(null);
   };
 
-  // Close Remove Liquidity modal and reset state
+  // Closes Remove Liquidity modal and clears selected pair
   const closeRemoveModal = () => {
     setIsRemoveModalOpen(false);
     setSelectedPair(null);
   };
 
+  // Show global loading spinner while pools data is loading
   if (isLoadingAllPools) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-70 z-50">
@@ -371,6 +384,7 @@ const PoolListContainer = ({
     );
   }
 
+  // Main render: Header, list of pools, and modals for add/remove liquidity
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#120023] via-[#1B002B] to-[#2B003D] text-white font-sans">
       <Header />

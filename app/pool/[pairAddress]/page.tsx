@@ -158,7 +158,7 @@ const PoolDetailPage = () => {
             </h2>
             <div className="text-md space-y-3 text-center">
               <p>
-                <span className="font-semibold text-white">
+                <span className="font-semibold text-gray-400">
                   {symbolToken0?.toString() ?? '...'}:
                 </span>{' '}
                 <span className=" text-gray-400 break-all">
@@ -166,7 +166,7 @@ const PoolDetailPage = () => {
                 </span>
               </p>
               <p>
-                <span className="font-semibold text-white">
+                <span className="font-semibold text-gray-400">
                   {symbolToken1?.toString() ?? '...'}:
                 </span>{' '}
                 <span className="text-gray-400 break-all">
@@ -183,13 +183,13 @@ const PoolDetailPage = () => {
               Pool Tokens
             </h2>
             <div className="flex-1 space-y-3">
-              <p className="text-white text-md text-center">
+              <p className="text-gray-400 text-md text-center">
                 {token0Name?.toString() ?? '...'}{' '}
                 <span className=" text-gray-400">
                   ({symbolToken0?.toString() ?? '...'})
                 </span>
               </p>
-              <p className="text-white text-md text-center">
+              <p className="text-gray-400 text-md text-center">
                 {token1Name?.toString() ?? '...'}{' '}
                 <span className=" text-gray-400">
                   ({symbolToken1?.toString() ?? '...'})
@@ -205,11 +205,11 @@ const PoolDetailPage = () => {
             </h2>
             {reserves ? (
               <div className="flex-1 space-y-3">
-                <p className="text-white text-md text-center">
+                <p className="text-gray-400 text-md text-center">
                   {symbolToken0?.toString() ?? '...'}:{' '}
                   <span className=" text-gray-400">{reserve0Formatted}</span>
                 </p>
-                <p className="text-white text-md text-center">
+                <p className="text-gray-400 text-md text-center">
                   {symbolToken1?.toString() ?? '...'}:{' '}
                   <span className=" text-gray-400">{reserve1Formatted}</span>
                 </p>
@@ -225,13 +225,13 @@ const PoolDetailPage = () => {
             </h2>
             {reserves ? (
               <div className="flex-1 space-y-3">
-                <p className="text-white text-md text-center">
+                <p className="text-gray-400 text-md text-center">
                   {symbolToken0?.toString() ?? '...'}:{' '}
                   <span className=" text-gray-400">
                     {userReserve0Formatted}
                   </span>
                 </p>
-                <p className="text-white text-md text-center">
+                <p className="text-gray-400 text-md text-center">
                   {symbolToken1?.toString() ?? '...'}:{' '}
                   <span className=" text-gray-400">
                     {userReserve1Formatted}
@@ -250,13 +250,13 @@ const PoolDetailPage = () => {
             </h2>
             {isConnected ? (
               <div className="flex-1 space-y-3">
-                <p className="text-white text-md text-center">
+                <p className="text-gray-400 text-md text-center">
                   {symbolToken0?.toString() ?? 'Token0'}:{' '}
                   <span className=" text-gray-400">
                     {formattedToken0Balance}
                   </span>
                 </p>
-                <p className="text-white text-md text-center">
+                <p className="text-gray-400 text-md text-center">
                   {symbolToken1?.toString() ?? 'Token1'}:{' '}
                   <span className=" text-gray-400">
                     {formattedToken1Balance}
@@ -275,7 +275,7 @@ const PoolDetailPage = () => {
             <h2 className="text-purple-500 text-xl font-semibold mb-3">
               Pool Share
             </h2>
-            <p className="text-white text-2xl font-bold">
+            <p className="text-gray-400 text-2xl font-bold">
               {(userSharePct! * 100).toFixed(2)}%
             </p>
           </div>
