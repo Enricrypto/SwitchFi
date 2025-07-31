@@ -2,8 +2,14 @@ import { ReactQueryProvider } from '../providers/ReactQueryProvider';
 import { Web3Provider } from '../providers/Web3Provider';
 import PoolsProvider from '../providers/PoolsProvider';
 import { ToastContainer } from 'react-toastify';
+import { Rubik } from 'next/font/google';
 import 'react-toastify/dist/ReactToastify.css';
 import '../app/globals.css';
+
+const rubik = Rubik({
+  subsets: ['latin'],
+  display: 'swap',
+});
 
 export default function RootLayout({
   children,
@@ -12,7 +18,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>
+      <body className={rubik.className}>
         <ReactQueryProvider>
           <Web3Provider>
             <PoolsProvider />
