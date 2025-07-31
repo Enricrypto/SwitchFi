@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useState } from 'react';
 import { usePathname } from 'next/navigation';
-import Image from 'next/image';
+import Logo from './Logo';
 
 export default function Header() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -15,13 +15,9 @@ export default function Header() {
   return (
     <header className="w-full flex justify-between items-center p-12 h-20 bg-transparent">
       <Link href="/">
-        <Image
-          src="/logo2Switch.png" // path relative to /public
-          alt="SwitchFi Logo"
-          width={80} // desired width
-          height={80} // desired height
-          priority // loads it eagerly for important images like logos
-          style={{ transform: 'scale(1.5)' }}
+        <Logo
+          className="w-20 h-20 transform scale-150"
+          aria-label="SwitchFi Logo"
         />
       </Link>
       <nav className="flex gap-18 text-sm sm:text-base text-gray-400">
