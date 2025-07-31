@@ -6,7 +6,7 @@ import { useReadContract, useAccount, usePublicClient } from 'wagmi';
 import { arbitrum } from 'wagmi/chains';
 import { ERC20Abi } from '@/constants';
 import { formatUnits } from 'viem';
-import Header from '../../../components/ui/Header';
+import Header from '../../../components/Header';
 import { usePoolsStore } from '../../../store/usePoolsStore';
 
 const PoolDetailPage = () => {

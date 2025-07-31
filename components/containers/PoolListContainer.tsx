@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useWriteContract, useAccount, usePublicClient } from 'wagmi';
 import { arbitrum } from 'wagmi/chains';
-import Header from '../ui/Header';
+import Header from '../Header';
 import Spinner from '../ui/Spinner';
 import AddLiquidityModal from '../modals/addLiquidityModal';
 import RemoveLiquidityModal from '../modals/removeLiquidityModal';

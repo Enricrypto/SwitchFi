@@ -16,7 +16,7 @@ import {
   factoryABI,
   tokenList,
 } from '@/constants';
-import Header from '../../components/ui/Header';
+import { Header } from '../../components/Header';
 import Spinner from '../../components/ui/Spinner';
 import MintToken from '../../components/ui/MintToken';
 import { toast } from 'react-toastify';

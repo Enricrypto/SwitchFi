@@ -4,9 +4,9 @@ import Link from 'next/link';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useState } from 'react';
 import { usePathname } from 'next/navigation';
-import Logo from './Logo';
+import Logo from '../components/Logo';
 
-export default function Header() {
+export function Header() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const pathname = usePathname();
 
