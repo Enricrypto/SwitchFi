@@ -8,6 +8,9 @@ module.exports = {
   safelist: ['bg-weird-lime', 'text-weird-purple'], // if weird is top-level
   theme: {
     extend: {
+      screens: {
+        'xs': '475px',
+      },
       colors: {
         cosmic: {
           bg: '#120023',
