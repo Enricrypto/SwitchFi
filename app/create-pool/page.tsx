@@ -16,7 +16,6 @@ import {
   factoryABI,
   tokenList,
 } from '@/constants';
-import { Header } from '../../components/Header';
 import Spinner from '../../components/ui/Spinner';
 import MintToken from '../../components/ui/MintToken';
 import { toast } from 'react-toastify';
@@ -160,9 +159,7 @@ const CreatePoolPage = () => {
   /** ------------------ JSX Render ------------------ */
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#120023] via-[#1B002B] to-[#2B003D] text-white font-sans">
-      <Header />
-
-      <div className="flex items-center justify-center p-6 mt-18">
+      <div className="flex items-center justify-center p-6 pt-24">
         <div className="w-full max-w-md p-8 rounded-3xl backdrop-blur-xl bg-white/5 border border-[#AB37FF33] shadow-[0_0_40px_#AB37FF33] space-y-6 transition-all duration-300">
           <h1 className="text-3xl font-bold text-center text-white tracking-wide drop-shadow-[0_0_10px_#AB37FFAA]">
             Create a Pool

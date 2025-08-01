@@ -5,6 +5,8 @@ import { ReactQueryProvider } from '../providers/ReactQueryProvider'
 import { Web3Provider } from '../providers/Web3Provider'
 import PoolsProvider from '../providers/PoolsProvider'
 import { ToastContainer } from 'react-toastify'
+import { Header } from '../components/Header'
+import { Footer } from '../components/Footer'
 import 'react-toastify/dist/ReactToastify.css'
 import './globals.css'
 
@@ -34,7 +36,9 @@ export default function RootLayout({
         <ReactQueryProvider>
           <Web3Provider>
             <PoolsProvider />
-            {children}
+            <Header />
+            <main className="flex-auto">{children}</main>
+            <Footer />
             <ToastContainer />
           </Web3Provider>
         </ReactQueryProvider>
