@@ -97,9 +97,26 @@ body {
 }
 
 .text-gradient-blue {
-  background: linear-gradient(to right, #D5E5FF 0%, #ADD0FE 50%, #2F7FF3 100%);
+  background: linear-gradient(to right, #D5E5FF 0%, #78b3ff 50%, #2F7FF3 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   color: transparent;
+}
+
+.h2 {
+  font-size: 3.25rem; /* text-4xl */
+  font-weight: 600; /* font-semibold */
+  letter-spacing: -0.025em; /* tracking-tight */
+  color: white;
+}
+
+@media (min-width: 640px) {
+  .subtitle {
+    font-size: 3rem; /* sm:text-5xl */
+  }
+}
+
+.gradient-container {
+  background: linear-gradient(to bottom, #0E0E4F, #07072f 50%, #000020 100%);
 }
