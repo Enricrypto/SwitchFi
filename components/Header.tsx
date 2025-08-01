@@ -15,7 +15,7 @@ export function Header() {
   const isActive = (path: string) => pathname === path;
 
   return (
-    <header className="bg-darkblue w-full flex justify-between items-center px-3 py-2 sm:px-4 sm:py-3 lg:px-12 h-14 sm:h-16 lg:h-20 relative z-50">
+    <header className="bg-transparent w-full flex justify-between items-center px-3 py-2 sm:px-4 sm:py-3 lg:px-12 h-14 sm:h-16 lg:h-20 relative z-50">
       <Link href="/" className="flex-shrink-0">
         <Logo
           className="w-24 lg:h-24"
@@ -24,7 +24,7 @@ export function Header() {
       </Link>
       
       {/* Desktop Navigation */}
-      <nav className="hidden md:flex gap-4 lg:gap-8 text-sm lg:text-base text-white">
+      <nav className="hidden md:flex gap-4 lg:gap-8 text-sm font-medium lg:text-base text-white">
         <Link
           href="/create-pool"
           className="hover:text-blue-400 transition-colors duration-300 whitespace-nowrap"
