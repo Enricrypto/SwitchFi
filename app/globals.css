@@ -118,5 +118,9 @@ body {
 }
 
 .gradient-container {
-  background: linear-gradient(to bottom, #0E0E4F, #07072f 50%, #000020 100%);
+  background: linear-gradient(to bottom, #0E0E4F, #09093b 50%, #000020);
+}
+
+.bg-darkblue {
+  background-color: #000020;
 }
