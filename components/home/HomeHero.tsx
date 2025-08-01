@@ -10,16 +10,16 @@ export function HomeHero() {
             <h1 className="text-5xl font-semibold tracking-tight leading-tight text-pretty text-white  lg:text-7xl">
               Build, Swap, and Earn Effortlessly.
             </h1>
-            <p className="mt-8 text-lg font-medium text-pretty text-gray-200 sm:text-xl/8">
+            <p className="mt-8 text-lg font-light tracking-wide text-pretty text-gray-200 lg:text-xl/6">
               DeFi made simple: swap, earn, and build with zero fuss.
             </p>
             <div className="mt-10 flex items-center gap-x-6">
-              <Button variant="primary" rounded="full" as="a" href="#">
+              <Button variant="primary"  as="a" href="#">
                 Get started
               </Button>
-              <a href="#" className="btn-secondary">
+              <Button variant="secondary" as="a" href="#">
                 Learn more <span aria-hidden="true">→</span>
-              </a>
+              </Button>
             </div>
           </div>
         </div>

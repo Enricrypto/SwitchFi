@@ -117,56 +117,57 @@ export function Header() {
 
                   if (chain.unsupported) {
                     return (
-                      <button
+                      <Button
                         onClick={openChainModal}
-                        type="button"
-                        className="bg-gradient-to-r from-red-500 to-red-600 text-white text-sm px-4 py-2 rounded-lg hover:opacity-90 transition-opacity duration-200 font-medium"
+                        variant="destructive"
+                        size="sm"
                       >
                         Wrong network
-                      </button>
+                      </Button>
                     );
                   }
 
                   return (
                     <div className="flex gap-2">
-                      <button
+                      <Button
                         onClick={openChainModal}
-                        className="btn-primary-sm flex items-center gap-1"
-                        type="button"
+                        variant="primary"
+                        size="sm"
+                        leftIcon={
+                          chain.hasIcon && (
+                            <div
+                              style={{
+                                background: chain.iconBackground,
+                                width: 16,
+                                height: 16,
+                                borderRadius: 999,
+                                overflow: 'hidden',
+                              }}
+                            >
+                              {chain.iconUrl && (
+                                <img
+                                  alt={chain.name ?? 'Chain icon'}
+                                  src={chain.iconUrl}
+                                  style={{ width: 16, height: 16 }}
+                                />
+                              )}
+                            </div>
+                          )
+                        }
                       >
-                        {chain.hasIcon && (
-                          <div
-                            style={{
-                              background: chain.iconBackground,
-                              width: 16,
-                              height: 16,
-                              borderRadius: 999,
-                              overflow: 'hidden',
-                              marginRight: 4,
-                            }}
-                          >
-                            {chain.iconUrl && (
-                              <img
-                                alt={chain.name ?? 'Chain icon'}
-                                src={chain.iconUrl}
-                                style={{ width: 16, height: 16 }}
-                              />
-                            )}
-                          </div>
-                        )}
                         {chain.name}
-                      </button>
+                      </Button>
 
-                      <button
+                      <Button
                         onClick={openAccountModal}
-                        type="button"
-                        className="btn-primary"
+                        variant="primary"
+                        size="md"
                       >
                         {account.displayName}
                         {account.displayBalance
                           ? ` (${account.displayBalance})`
                           : ''}
-                      </button>
+                      </Button>
                     </div>
                   );
                 })()}
