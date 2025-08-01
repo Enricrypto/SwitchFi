@@ -69,3 +69,29 @@ body {
   opacity: 0.6;
   cursor: not-allowed;
 }
+/* Secondary Button Component */
+.btn-secondary {
+  font-size: 0.875rem; /* text-sm */
+  font-weight: 600;
+  color: white;
+  padding: 0.5rem 1.25rem; /* py-2 px-5 */
+  border-radius: 9999px; /* pill shape */
+  border: 2px solid transparent;
+  background-image: 
+    linear-gradient(#0B0F1C, #0B0F1C), /* dark background matching the site */
+    linear-gradient(to right, #2E83FF, #1C4F99); /* gradient border */
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+  cursor: pointer;
+}
+
+.btn-secondary:hover {
+  transform: scale(1.03);
+  opacity: 0.9;
+}
+
+.btn-secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

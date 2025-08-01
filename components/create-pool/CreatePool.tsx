@@ -217,11 +217,12 @@ export function CreatePool() {
           {/* ------------------ Create Pool Button ------------------ */}
           <button
             onClick={handleCreatePool}
-            className={`w-full py-3 px-6 rounded-full font-semibold flex justify-center items-center gap-2 transition-all duration-200 ${
+            className={`btn-primary w-full py-3 px-6 rounded-full font-semibold flex justify-center items-center gap-2 transition-all duration-200 ${
               isPending || isConfirming
-                ? 'bg-[#451063] opacity-60 cursor-not-allowed'
-                : 'bg-[#AB37FF] hover:bg-[#C155FF]'
+                ? 'opacity-60 cursor-not-allowed'
+                : ''
             } shadow-[0_0_20px_#AB37FF88]`}
+            disabled={isPending || isConfirming}
           >
             {isPending || isConfirming ? <Spinner /> : 'Create Pool'}
           </button>

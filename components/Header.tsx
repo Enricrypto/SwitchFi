@@ -5,6 +5,7 @@ import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import Logo from '../components/Logo';
+import { Button } from '@/components/ui/Button';
 
 export function Header() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -104,13 +105,13 @@ export function Header() {
                 {(() => {
                   if (!connected) {
                     return (
-                      <button
+                      <Button
                         onClick={openConnectModal}
-                        type="button"
-                        className="btn-primary"
+                        variant="primary"
+                        size="md"
                       >
                         Connect Wallet
-                      </button>
+                      </Button>
                     );
                   }
 
