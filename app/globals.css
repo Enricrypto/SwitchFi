@@ -95,3 +95,11 @@ body {
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+.text-gradient-blue {
+  background: linear-gradient(to right, #D5E5FF 0%, #ADD0FE 50%, #2F7FF3 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+}
