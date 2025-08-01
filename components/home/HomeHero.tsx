@@ -14,7 +14,7 @@ export function HomeHero() {
         <div className="px-6 py-24 lg:px-0 lg:py-32 lg:col-span-8">
           <div className="mx-auto max-w-lg lg:mx-0">
             <h1 className="text-5xl font-semibold tracking-tight leading-tight text-pretty text-white  lg:text-7xl">
-              Build, Swap, and Earn Effortlessly.
+              <span className="text-gradient-blue">Build</span>, <span className="text-gradient-blue">Swap</span>, and <span className="text-gradient-blue">Earn </span>Effortlessly.
             </h1>
             <p className="mt-8 text-lg font-light tracking-wide text-pretty text-gray-200 lg:text-xl/6">
               DeFi made simple: swap, earn, and build with zero fuss.
