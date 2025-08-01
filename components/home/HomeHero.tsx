@@ -9,7 +9,6 @@ export function HomeHero() {
         <div className="absolute w-[400px] h-[400px] bg-gradient-to-br from-[#2E83FF] to-[#1C4F99] opacity-30 rounded-full blur-[150px] top-[-100px] left-[-100px] z-0" />
         <div className="absolute w-[300px] h-[300px] bg-gradient-to-br from-[#4691FF] to-[#2669CA] opacity-30 rounded-full blur-[150px] top-[200px] right-[-100px] z-0" />
         <div className="absolute w-[400px] h-[400px] bg-gradient-to-br from-[#2E83FF] to-[#1C4F99] opacity-50 rounded-full blur-[150px] top-[-100px] right-[-100px] z-0" />
-        <div className="absolute w-[400px] h-[400px] bg-gradient-to-br from-[#2E83FF] to-[#1C4F99] opacity-40 rounded-full blur-[150px] top-[400px] right-[-400px] z-0" />
         {/* Hero Content */}
         <div className="px-6 py-24 lg:px-0 lg:py-32 lg:col-span-8">
           <div className="mx-auto max-w-lg lg:mx-0">
