@@ -6,7 +6,6 @@ import { useReadContract, useAccount, usePublicClient } from 'wagmi';
 import { arbitrum } from 'wagmi/chains';
 import { ERC20Abi } from '@/constants';
 import { formatUnits } from 'viem';
-import Header from '../../../components/Header';
 import { usePoolsStore } from '../../../store/usePoolsStore';
 
 const PoolDetailPage = () => {
@@ -136,10 +135,8 @@ const PoolDetailPage = () => {
   });
 
   return (
-    <>
-      <div className="min-h-screen bg-gradient-to-br from-[#120023] via-[#1B002B] to-[#2B003D] text-white font-sans">
-        <Header />
-        {/* ------------------ Top Section: Pair & Token Addresses ------------------ */}
+    <div className="min-h-screen bg-gradient-to-br from-[#120023] via-[#1B002B] to-[#2B003D] text-white font-sans">
+      {/* ------------------ Top Section: Pair & Token Addresses ------------------ */}
         <div className="m-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 auto-rows-fr">
           {/* Pair Address */}
           <div className="bg-gradient-to-br from-[#1B002B] to-[#320148] border border-[#AB37FF33] rounded-3xl p-6 shadow-[0_0_30px_#AB37FF33] backdrop-blur-sm transition-all duration-300 text-center h-full">
@@ -280,8 +277,7 @@ const PoolDetailPage = () => {
             </p>
           </div>
         </div>
-      </div>
-    </>
+    </div>
   );
 };
 
