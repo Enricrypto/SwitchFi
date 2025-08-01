@@ -65,7 +65,7 @@ export function HomeFeatures() {
             <div className="w-full overflow-hidden rounded-lg gradient-container gradient-border max-lg:rounded-b-4xl lg:rounded-br-4xl relative z-10">
               <img
                 alt=""
-                src="images/home/swaps.png"
+                src="images/home/coins.png"
                 className="h-80 w-full object-cover"
               />
               <div className="p-10">
