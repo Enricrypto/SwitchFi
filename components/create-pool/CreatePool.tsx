@@ -163,14 +163,14 @@ export function CreatePool() {
   return (
     <div className="min-h-screen">
       <div className="flex items-center justify-center p-6 pt-24">
-        <div className="w-full max-w-md p-8 rounded-3xl backdrop-blur-xl bg-white/5 border border-[#AB37FF33] shadow-[0_0_40px_#AB37FF33] space-y-6 transition-all duration-300">
+        <div className="w-full max-w-md p-8 rounded-3xl backdrop-blur-xl bg-white/5 border  gradient-border shadow-[0_0_40px_#AB37FF33] space-y-6 transition-all duration-300">
           {/* ------------------ Tab Navigation ------------------ */}
           <div className="flex rounded-xl bg-white/10 p-1 border border-[#AB37FF33]">
             <button
               onClick={() => setActiveTab('create')}
               className={`flex-1 py-2 px-4 rounded-lg font-semibold transition-all duration-200 ${
                 activeTab === 'create'
-                  ? 'bg-[#AB37FF] text-white shadow-[0_0_15px_#AB37FF66]'
+                  ? 'bg-lightblue text-white shadow-[0_0_15px_#AB37FF33]'
                   : 'text-white/70 hover:text-white hover:bg-white/5'
               }`}
             >
@@ -180,7 +180,7 @@ export function CreatePool() {
               onClick={() => setActiveTab('mint')}
               className={`flex-1 py-2 px-4 rounded-lg font-semibold transition-all duration-200 ${
                 activeTab === 'mint'
-                  ? 'bg-[#AB37FF] text-white shadow-[0_0_15px_#AB37FF66]'
+                  ? 'bg-lightblue text-white shadow-[0_0_15px_#AB37FF66]'
                   : 'text-white/70 hover:text-white hover:bg-white/5'
               }`}
             >
@@ -191,7 +191,7 @@ export function CreatePool() {
           {/* ------------------ Tab Content ------------------ */}
           {activeTab === 'create' ? (
             <>
-              <h1 className="text-3xl font-bold text-center text-white tracking-wide drop-shadow-[0_0_10px_#AB37FFAA]">
+              <h1 className="text-2xl font-bold text-center text-white tracking-wide drop-shadow-[0_0_10px_#AB37FF33]">
                 Create a Pool
               </h1>
 
