@@ -125,6 +125,10 @@ body {
   background-color: #000020 !important;
 }
 
+.bg-lightblue {
+  background-color: #2561BD !important;
+}
+
 /* Gradient Border Component */
 .gradient-border {
   border: 2px solid transparent;
