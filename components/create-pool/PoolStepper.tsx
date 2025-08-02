@@ -1,5 +1,6 @@
+'use client';
+
 import React from "react";
-import { Stepper, Step, Button, Typography } from "@material-tailwind/react";
 import {
   CogIcon,
   UserIcon,
@@ -8,79 +9,99 @@ import {
  
 export function PoolStepperContent() {
   const [activeStep, setActiveStep] = React.useState(0);
-  const [isLastStep, setIsLastStep] = React.useState(false);
-  const [isFirstStep, setIsFirstStep] = React.useState(false);
- 
-  const handleNext = () => !isLastStep && setActiveStep((cur) => cur + 1);
-  const handlePrev = () => !isFirstStep && setActiveStep((cur) => cur - 1);
+  
+  const steps = [
+    {
+      icon: UserIcon,
+      title: "Step 1",
+      description: "Select token & fee tier"
+    },
+    {
+      icon: CogIcon,
+      title: "Step 2", 
+      description: "Set initial price & range"
+    },
+    {
+      icon: BuildingLibraryIcon,
+      title: "Step 3",
+      description: "Enter deposit amount"
+    }
+  ];
  
   return (
-    <div className="w-full px-24 py-4">
-      <Stepper
-        activeStep={activeStep}
-        isLastStep={(value) => setIsLastStep(value)}
-        isFirstStep={(value) => setIsFirstStep(value)}
-      >
-        <Step onClick={() => setActiveStep(0)}>
-          <UserIcon className="h-5 w-5" />
-          <div className="absolute -bottom-[4.5rem] w-max text-center">
-            <Typography
-              variant="h6"
-              color={activeStep === 0 ? "blue-gray" : "gray"}
-            >
-              Step 1
-            </Typography>
-            <Typography
-              color={activeStep === 0 ? "blue-gray" : "gray"}
-              className="font-normal"
-            >
-                Select token & fee tier
-            </Typography>
-          </div>
-        </Step>
-        <Step onClick={() => setActiveStep(1)}>
-          <CogIcon className="h-5 w-5" />
-          <div className="absolute -bottom-[4.5rem] w-max text-center">
-            <Typography
-              variant="h6"
-              color={activeStep === 1 ? "blue-gray" : "gray"}
-            >
-              Step 2
-            </Typography>
-            <Typography
-              color={activeStep === 1 ? "blue-gray" : "gray"}
-              className="font-normal"
-            >
-              Set initial price & range
-            </Typography>
-          </div>
-        </Step>
-        <Step onClick={() => setActiveStep(2)}>
-          <BuildingLibraryIcon className="h-5 w-5" />
-          <div className="absolute -bottom-[4.5rem] w-max text-center">
-            <Typography
-              variant="h6"
-              color={activeStep === 2 ? "blue-gray" : "gray"}
-            >
-              Step 3
-            </Typography>
-            <Typography
-              color={activeStep === 2 ? "blue-gray" : "gray"}
-              className="font-normal"
-            >
-              Enter deposit amount
-            </Typography>
-          </div>
-        </Step>
-      </Stepper>
-      <div className="mt-32 flex justify-between">
-        <Button onClick={handlePrev} disabled={isFirstStep}>
-          Prev
+    <div className="w-full flex justify-center py-12">
+      <div className="max-w-2xl px-6">
+        {/* Custom Stepper */}
+        <div className="flex items-center">
+          {steps.map((step, index) => {
+            const Icon = step.icon;
+            const isActive = index === activeStep;
+            const isCompleted = index < activeStep;
+            
+            return (
+              <React.Fragment key={index}>
+                <div className="flex flex-col items-center relative">
+                  {/* Step Circle */}
+                  <button
+                    onClick={() => setActiveStep(index)}
+                    className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200 z-10 ${
+                      isActive 
+                        ? 'bg-lightblue text-white shadow-[0_0_20px_#AB37FF66]' 
+                        : isCompleted
+                        ? 'bg-lightblue text-white'
+                        : 'bg-white/10 text-white/60 hover:bg-white/20'
+                    }`}
+                    aria-label={`Go to ${step.title}: ${step.description}`}
+                  >
+                    <Icon className="h-5 w-5" />
+                  </button>
+                  
+                  {/* Step Info */}
+                  <div className="absolute -bottom-16 w-max text-center">
+                    <h6 className={`text-sm font-semibold ${
+                      isActive ? 'text-white' : 'text-white/60'
+                    }`}>
+                      {step.title}
+                    </h6>
+                    <p className={`text-xs mt-1 ${
+                      isActive ? 'text-white/80' : 'text-white/40'
+                    }`}>
+                      {step.description}
+                    </p>
+                  </div>
+                </div>
+                
+                {/* Connector Line */}
+                {index < steps.length - 1 && (
+                  <div className={`w-24 h-0.5 mx-3 ${
+                    index < activeStep ? 'bg-lightblue' : 'bg-white/20'
+                  }`} />
+                )}
+              </React.Fragment>
+            );
+          })}
+        </div>
+      </div>
+      
+      {/* Navigation Buttons - Hidden for now */}
+      {/* <div className="flex justify-between mt-8">
+        <Button
+          onClick={handlePrev}
+          disabled={isFirstStep}
+          variant="secondary"
+          size="md"
+        >
+          Previous
         </Button>
-        <Button onClick={handleNext} disabled={isLastStep}>
+        <Button
+          onClick={handleNext}
+          disabled={isLastStep}
+          variant="primary"
+          size="md"
+        >
           Next
         </Button>
-      </div>
+      </div> */}
     </div>
   );
 }
