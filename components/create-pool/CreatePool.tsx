@@ -21,6 +21,9 @@ import MintToken from '../ui/MintToken';
 import { toast } from 'react-toastify';
 
 export function CreatePool() {
+  /** ------------------ Tab State ------------------ */
+  const [activeTab, setActiveTab] = useState<'create' | 'mint'>('create');
+
   /** ------------------ Wallet Connection Status ------------------ */
   const { isConnected } = useAccount();
   const router = useRouter();
@@ -161,115 +164,150 @@ export function CreatePool() {
     <div className="min-h-screen">
       <div className="flex items-center justify-center p-6 pt-24">
         <div className="w-full max-w-md p-8 rounded-3xl backdrop-blur-xl bg-white/5 border border-[#AB37FF33] shadow-[0_0_40px_#AB37FF33] space-y-6 transition-all duration-300">
-          <h1 className="text-3xl font-bold text-center text-white tracking-wide drop-shadow-[0_0_10px_#AB37FFAA]">
-            Create a Pool
-          </h1>
+          {/* ------------------ Tab Navigation ------------------ */}
+          <div className="flex rounded-xl bg-white/10 p-1 border border-[#AB37FF33]">
+            <button
+              onClick={() => setActiveTab('create')}
+              className={`flex-1 py-2 px-4 rounded-lg font-semibold transition-all duration-200 ${
+                activeTab === 'create'
+                  ? 'bg-[#AB37FF] text-white shadow-[0_0_15px_#AB37FF66]'
+                  : 'text-white/70 hover:text-white hover:bg-white/5'
+              }`}
+            >
+              Create Pool
+            </button>
+            <button
+              onClick={() => setActiveTab('mint')}
+              className={`flex-1 py-2 px-4 rounded-lg font-semibold transition-all duration-200 ${
+                activeTab === 'mint'
+                  ? 'bg-[#AB37FF] text-white shadow-[0_0_15px_#AB37FF66]'
+                  : 'text-white/70 hover:text-white hover:bg-white/5'
+              }`}
+            >
+              Mint Tokens
+            </button>
+          </div>
 
-          {/* ------------------ Token Selectors ------------------ */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm mb-1 text-white/70">
-                Token A
-              </label>
-              <select
-                className="w-full px-3 py-2 rounded-xl bg-white/10 text-white border border-[#AB37FF33] focus:outline-none focus:ring-2 focus:ring-[#AB37FF66] transition"
-                value={tokenASelected ? tokenA : ''}
-                onChange={(e) => {
-                  setTokenA(e.target.value as `0x${string}`);
-                  setTokenASelected(true);
-                }}
+          {/* ------------------ Tab Content ------------------ */}
+          {activeTab === 'create' ? (
+            <>
+              <h1 className="text-3xl font-bold text-center text-white tracking-wide drop-shadow-[0_0_10px_#AB37FFAA]">
+                Create a Pool
+              </h1>
+
+              {/* ------------------ Token Selectors ------------------ */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm mb-1 text-white/70">
+                    Token A
+                  </label>
+                  <select
+                    className="w-full px-3 py-2 rounded-xl bg-white/10 text-white border border-[#AB37FF33] focus:outline-none focus:ring-2 focus:ring-[#AB37FF66] transition"
+                    value={tokenASelected ? tokenA : ''}
+                    onChange={(e) => {
+                      setTokenA(e.target.value as `0x${string}`);
+                      setTokenASelected(true);
+                    }}
+                    aria-label="Select Token A"
+                  >
+                    <option value="">Select Token A</option>
+                    {tokenList
+                      .filter((token) => token.address !== tokenB)
+                      .map((token) => (
+                        <option key={token.address} value={token.address}>
+                          {token.symbol}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm mb-1 text-white/70">
+                    Token B
+                  </label>
+                  <select
+                    className="w-full px-3 py-2 rounded-xl bg-white/10 text-white border border-[#AB37FF33] focus:outline-none focus:ring-2 focus:ring-[#AB37FF66] transition"
+                    value={tokenBSelected ? tokenB : ''}
+                    onChange={(e) => {
+                      setTokenB(e.target.value as `0x${string}`);
+                      setTokenBSelected(true);
+                    }}
+                    aria-label="Select Token B"
+                  >
+                    <option value="">Select Token B</option>
+                    {tokenList
+                      .filter((token) => token.address !== tokenA)
+                      .map((token) => (
+                        <option key={token.address} value={token.address}>
+                          {token.symbol}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* ------------------ Create Pool Button ------------------ */}
+              <button
+                onClick={handleCreatePool}
+                className={`btn-primary w-full py-3 px-6 rounded-full font-semibold flex justify-center items-center gap-2 transition-all duration-200 ${
+                  isPending || isConfirming
+                    ? 'opacity-60 cursor-not-allowed'
+                    : ''
+                } shadow-[0_0_20px_#AB37FF88]`}
+                disabled={isPending || isConfirming}
               >
-                <option value="">Select Token A</option>
-                {tokenList
-                  .filter((token) => token.address !== tokenB)
-                  .map((token) => (
-                    <option key={token.address} value={token.address}>
-                      {token.symbol}
-                    </option>
-                  ))}
-              </select>
-            </div>
+                {isPending || isConfirming ? <Spinner /> : 'Create Pool'}
+              </button>
 
-            <div>
-              <label className="block text-sm mb-1 text-white/70">
-                Token B
-              </label>
-              <select
-                className="w-full px-3 py-2 rounded-xl bg-white/10 text-white border border-[#AB37FF33] focus:outline-none focus:ring-2 focus:ring-[#AB37FF66] transition"
-                value={tokenBSelected ? tokenB : ''}
-                onChange={(e) => {
-                  setTokenB(e.target.value as `0x${string}`);
-                  setTokenBSelected(true);
-                }}
-              >
-                <option value="">Select Token B</option>
-                {tokenList
-                  .filter((token) => token.address !== tokenA)
-                  .map((token) => (
-                    <option key={token.address} value={token.address}>
-                      {token.symbol}
-                    </option>
-                  ))}
-              </select>
-            </div>
-          </div>
+              {/* ------------------ Status Messages ------------------ */}
+              <div className="space-y-2 text-sm">
+                {isPoolLoading && (
+                  <div className="text-yellow-400 animate-pulse">
+                    Checking if pool exists...
+                  </div>
+                )}
 
-          {/* ------------------ Create Pool Button ------------------ */}
-          <button
-            onClick={handleCreatePool}
-            className={`btn-primary w-full py-3 px-6 rounded-full font-semibold flex justify-center items-center gap-2 transition-all duration-200 ${
-              isPending || isConfirming
-                ? 'opacity-60 cursor-not-allowed'
-                : ''
-            } shadow-[0_0_20px_#AB37FF88]`}
-            disabled={isPending || isConfirming}
-          >
-            {isPending || isConfirming ? <Spinner /> : 'Create Pool'}
-          </button>
+                {poolExists && tokenASelected && tokenBSelected && (
+                  <div className="text-red-400">
+                    Pool already exists at:
+                    <span className="block break-all mt-1 opacity-80">
+                      {String(poolAddress)}
+                    </span>
+                  </div>
+                )}
 
-          {/* ------------------ Status Messages ------------------ */}
-          <div className="space-y-2 text-sm">
-            {isPoolLoading && (
-              <div className="text-yellow-400 animate-pulse">
-                Checking if pool exists...
+                {hash && (
+                  <div className="p-3 rounded-xl bg-blue-900/30 text-blue-300 border border-blue-500">
+                    Transaction sent. Hash:
+                    <div className="break-all mt-1">{hash}</div>
+                  </div>
+                )}
+
+                {isConfirming && (
+                  <div className="text-yellow-600">Waiting for confirmation...</div>
+                )}
+
+                {isConfirmed && (
+                  <div className="text-yellow-400">Transaction confirmed</div>
+                )}
+
+                {localError && (
+                  <div className="text-red-400">
+                    Error: {localError.shortMessage || localError.message}
+                  </div>
+                )}
               </div>
-            )}
-
-            {poolExists && tokenASelected && tokenBSelected && (
-              <div className="text-red-400">
-                Pool already exists at:
-                <span className="block break-all mt-1 opacity-80">
-                  {String(poolAddress)}
-                </span>
+            </>
+          ) : (
+            <>
+              <h1 className="text-3xl font-bold text-center text-white tracking-wide drop-shadow-[0_0_10px_#AB37FFAA]">
+                Mint Tokens
+              </h1>
+              <div className="-mx-8 -mb-8">
+                <MintToken />
               </div>
-            )}
-
-            {hash && (
-              <div className="p-3 rounded-xl bg-blue-900/30 text-blue-300 border border-blue-500">
-                Transaction sent. Hash:
-                <div className="break-all mt-1">{hash}</div>
-              </div>
-            )}
-
-            {isConfirming && (
-              <div className="text-yellow-600">Waiting for confirmation...</div>
-            )}
-
-            {isConfirmed && (
-              <div className="text-yellow-400">Transaction confirmed</div>
-            )}
-
-            {localError && (
-              <div className="text-red-400">
-                Error: {localError.shortMessage || localError.message}
-              </div>
-            )}
-          </div>
-
-          {/* ------------------ Optional: Mint Component ------------------ */}
-          <div className="pt-4 border-t border-white/10">
-            <MintToken />
-          </div>
+            </>
+          )}
         </div>
       </div>
     </div>
