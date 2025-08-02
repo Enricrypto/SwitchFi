@@ -1,6 +1,19 @@
 import Logo from './Logo'
 import { SVGProps } from 'react'
 
+// Chevron Right Icon Component
+const ChevronRightIcon = (props: SVGProps<SVGSVGElement>) => (
+  <svg
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+    strokeWidth={2}
+    {...props}
+  >
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+  </svg>
+)
+
 const navigation = {
   solutions: [
     { name: 'Create Pools', href: '/create-pool' },
@@ -128,7 +141,8 @@ export  function Footer() {
                 <ul role="list" className="mt-6 space-y-4">
                   {navigation.support.map((item) => (
                     <li key={item.name}>
-                      <a href={item.href} className="text-sm/6 text-gray-400 hover:text-gray-300">
+                      <a href={item.href} className="text-sm/6 text-gray-400 hover:text-gray-300 flex items-center gap-2">
+                        <ChevronRightIcon className="w-3 h-3 flex-shrink-0" />
                         {item.name}
                       </a>
                     </li>
@@ -142,7 +156,8 @@ export  function Footer() {
                 <ul role="list" className="mt-6 space-y-4">
                   {navigation.company.map((item) => (
                     <li key={item.name}>
-                      <a href={item.href} className="text-sm/6 text-gray-400 hover:text-gray-300">
+                      <a href={item.href} className={`text-sm/6 text-gray-400 hover:text-gray-300 ${item.name === 'Blog' ? 'flex items-center gap-2' : ''}`}>
+                        {item.name === 'Blog' && <ChevronRightIcon className="w-3 h-3 flex-shrink-0" />}
                         {item.name}
                       </a>
                     </li>
