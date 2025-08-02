@@ -32,7 +32,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={clsx('bg-white antialiased', rubik)}>
-      <body>
+      <body suppressHydrationWarning={true}>
         <ReactQueryProvider>
           <Web3Provider>
             <PoolsProvider />
