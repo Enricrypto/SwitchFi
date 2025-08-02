@@ -140,7 +140,7 @@ export function CreatePool() {
     }
 
     if (tokenA === tokenB) {
-      toast.error('Token A and Token B cannot be the same.');
+      toast.error('Base Token and Quote Token cannot be the same.');
       return;
     }
 
@@ -163,7 +163,7 @@ export function CreatePool() {
   return (
     <div className="min-h-screen">
       <div className="flex items-center justify-center p-6 pt-24">
-        <div className="w-full max-w-md p-8 rounded-3xl backdrop-blur-xl bg-white/5 border  gradient-border shadow-[0_0_40px_#AB37FF33] space-y-6 transition-all duration-300">
+        <div className="w-full max-w-lg p-8 rounded-3xl backdrop-blur-xl bg-white/5 border  gradient-border shadow-[0_0_40px_#AB37FF33] space-y-6 transition-all duration-300">
           {/* ------------------ Tab Navigation ------------------ */}
           <div className="flex rounded-xl bg-white/10 p-1 border border-[#AB37FF33]">
             <button
@@ -191,15 +191,15 @@ export function CreatePool() {
           {/* ------------------ Tab Content ------------------ */}
           {activeTab === 'create' ? (
             <>
-              <h1 className="text-2xl font-bold text-center text-white tracking-wide drop-shadow-[0_0_10px_#AB37FF33]">
-                Create a Pool
+              <h1 className="lg:text-xl  text-lg font-semibold text-left text-white tracking-wide drop-shadow-[0_0_10px_#AB37FF33]">
+                First, select tokens & fee tier
               </h1>
 
               {/* ------------------ Token Selectors ------------------ */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm mb-1 text-white/70">
-                    Token A
+                  <label className="block text-sm/5 mb-1 text-white/70">
+                    Base Token
                   </label>
                   <select
                     className="w-full px-3 py-2 rounded-xl bg-white/10 text-white border border-[#AB37FF33] focus:outline-none focus:ring-2 focus:ring-[#AB37FF66] transition"
@@ -208,9 +208,9 @@ export function CreatePool() {
                       setTokenA(e.target.value as `0x${string}`);
                       setTokenASelected(true);
                     }}
-                    aria-label="Select Token A"
+                    aria-label="Select Base Token"
                   >
-                    <option value="">Select Token A</option>
+                    <option value="">Select Token</option>
                     {tokenList
                       .filter((token) => token.address !== tokenB)
                       .map((token) => (
@@ -222,8 +222,8 @@ export function CreatePool() {
                 </div>
 
                 <div>
-                  <label className="block text-sm mb-1 text-white/70">
-                    Token B
+                  <label className="block text-sm/5 mb-1 text-white/70">
+                    Quote Token
                   </label>
                   <select
                     className="w-full px-3 py-2 rounded-xl bg-white/10 text-white border border-[#AB37FF33] focus:outline-none focus:ring-2 focus:ring-[#AB37FF66] transition"
@@ -232,9 +232,9 @@ export function CreatePool() {
                       setTokenB(e.target.value as `0x${string}`);
                       setTokenBSelected(true);
                     }}
-                    aria-label="Select Token B"
+                    aria-label="Select Quote Token"
                   >
-                    <option value="">Select Token B</option>
+                    <option value="">Select Token</option>
                     {tokenList
                       .filter((token) => token.address !== tokenA)
                       .map((token) => (
