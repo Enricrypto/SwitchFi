@@ -3,16 +3,12 @@
 import Link from 'next/link';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useState } from 'react';
-import { usePathname } from 'next/navigation';
 import Logo from '../components/Logo';
 import { Button } from '@/components/ui/Button';
 
 export function Header() {
   const [poolsDropdownOpen, setPoolsDropdownOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const pathname = usePathname();
-
-  const isActive = (path: string) => pathname === path;
 
   return (
     <header className="bg-transparent w-full flex justify-between items-center px-3 py-2 sm:px-4 sm:py-3 lg:px-12 h-14 sm:h-16 lg:h-20 relative z-50">
@@ -59,18 +55,14 @@ export function Header() {
             >
               <Link
                 href="/pools/all"
-                className={`block px-4 py-2 hover:bg-purple-100 ${
-                  isActive('/pools/all') ? 'bg-purple-200 font-semibold' : ''
-                }`}
+                className="block px-4 py-2 hover:bg-purple-100"
                 onClick={() => setPoolsDropdownOpen(false)}
               >
                 Liquidity Pools
               </Link>
               <Link
                 href="/pools/user"
-                className={`block px-4 py-2 hover:bg-purple-100 ${
-                  isActive('/pools/user') ? 'bg-purple-200 font-semibold' : ''
-                }`}
+                className="block px-4 py-2 hover:bg-purple-100"
                 onClick={() => setPoolsDropdownOpen(false)}
               >
                 My Pools
