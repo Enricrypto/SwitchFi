@@ -26,6 +26,18 @@ export function Header() {
       {/* Desktop Navigation */}
       <nav className="hidden md:flex gap-4 lg:gap-8 text-sm font-medium lg:text-base text-white">
         <Link
+          href="/swap"
+          className="hover:text-blue-400 transition-colors duration-300"
+        >
+          Swap
+        </Link>
+        <Link
+          href=""
+          className="hover:text-blue-400 transition-colors duration-300"
+        >
+          Portfolio
+        </Link>
+        <Link
           href="/create-pool"
           className="hover:text-blue-400 transition-colors duration-300 whitespace-nowrap"
         >
@@ -37,7 +49,7 @@ export function Header() {
             onClick={() => setPoolsDropdownOpen(!poolsDropdownOpen)}
             className="hover:text-blue-400 transition-colors duration-300 cursor-pointer"
           >
-            Pools
+            Liquidity Pools
           </button>
 
           {poolsDropdownOpen && (
@@ -52,7 +64,7 @@ export function Header() {
                 }`}
                 onClick={() => setPoolsDropdownOpen(false)}
               >
-                All Pools
+                Liquidity Pools
               </Link>
               <Link
                 href="/pools/user"
@@ -63,15 +75,10 @@ export function Header() {
               >
                 My Pools
               </Link>
+              
             </div>
           )}
         </div>
-        <Link
-          href="/swap"
-          className="hover:text-blue-400 transition-colors duration-300"
-        >
-          Swap
-        </Link>
       </nav>
       
       {/* Right side container */}
@@ -204,6 +211,20 @@ export function Header() {
         <div className="absolute top-full left-0 right-0 bg-darkblue border-t border-white/10 md:hidden z-40">
           <nav className="flex flex-col p-4 space-y-4 text-white">
             <Link
+              href="/swap"
+              className="hover:text-blue-400 transition-colors duration-300 py-2"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Swap
+            </Link>
+            <Link
+              href=""
+              className="hover:text-blue-400 transition-colors duration-300 py-2"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Portfolio
+            </Link>
+            <Link
               href="/create-pool"
               className="hover:text-blue-400 transition-colors duration-300 py-2"
               onClick={() => setMobileMenuOpen(false)}
@@ -223,13 +244,6 @@ export function Header() {
               onClick={() => setMobileMenuOpen(false)}
             >
               My Pools
-            </Link>
-            <Link
-              href="/swap"
-              className="hover:text-blue-400 transition-colors duration-300 py-2"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Swap
             </Link>
             
             {/* Mobile Connect Wallet */}
