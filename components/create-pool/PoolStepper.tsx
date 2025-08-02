@@ -2,9 +2,9 @@
 
 import React from "react";
 import {
-  CogIcon,
-  UserIcon,
-  BuildingLibraryIcon,
+  CurrencyDollarIcon,
+  AdjustmentsHorizontalIcon,
+  PlusIcon,
 } from "@heroicons/react/24/outline";
  
 export function PoolStepperContent() {
@@ -12,17 +12,17 @@ export function PoolStepperContent() {
   
   const steps = [
     {
-      icon: UserIcon,
+      icon: CurrencyDollarIcon,
       title: "Step 1",
       description: "Select token & fee tier"
     },
     {
-      icon: CogIcon,
+      icon: AdjustmentsHorizontalIcon,
       title: "Step 2", 
       description: "Set initial price & range"
     },
     {
-      icon: BuildingLibraryIcon,
+      icon: PlusIcon,
       title: "Step 3",
       description: "Enter deposit amount"
     }

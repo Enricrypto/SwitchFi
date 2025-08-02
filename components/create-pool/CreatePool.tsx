@@ -165,7 +165,7 @@ export function CreatePool() {
       <div className="flex items-center justify-center p-6 pt-24">
         <div className="w-full max-w-lg p-8 rounded-3xl backdrop-blur-xl bg-white/5 border  gradient-border shadow-[0_0_40px_#AB37FF33] space-y-6 transition-all duration-300">
           {/* ------------------ Tab Navigation ------------------ */}
-          <div className="flex rounded-xl bg-white/10 p-1 border border-[#AB37FF33]">
+          <div className="flex rounded-xl bg-white/10 p-1 border border-[#3769ff]">
             <button
               onClick={() => setActiveTab('create')}
               className={`flex-1 py-2 px-4 rounded-lg font-semibold transition-all duration-200 ${
@@ -202,7 +202,7 @@ export function CreatePool() {
                     Base Token
                   </label>
                   <select
-                    className="w-full px-3 py-2 rounded-xl bg-white/10 text-white border border-[#AB37FF33] focus:outline-none focus:ring-2 focus:ring-[#AB37FF66] transition"
+                    className="w-full px-3 py-2 rounded-xl bg-white/10 text-white border border-[#3e37ff33] focus:outline-none focus:ring-2 focus:ring-[#AB37FF66] transition"
                     value={tokenASelected ? tokenA : ''}
                     onChange={(e) => {
                       setTokenA(e.target.value as `0x${string}`);
@@ -226,7 +226,7 @@ export function CreatePool() {
                     Quote Token
                   </label>
                   <select
-                    className="w-full px-3 py-2 rounded-xl bg-white/10 text-white border border-[#AB37FF33] focus:outline-none focus:ring-2 focus:ring-[#AB37FF66] transition"
+                    className="w-full px-3 py-2 rounded-xl bg-white/10 text-white border border-[#3769ff] focus:outline-none focus:ring-2 focus:ring-[#AB37FF66] transition"
                     value={tokenBSelected ? tokenB : ''}
                     onChange={(e) => {
                       setTokenB(e.target.value as `0x${string}`);
