@@ -7,9 +7,9 @@ interface StepSidebarProps {
 
 const steps = [
   { id: 1, title: 'Select Tokens & Fee Tier' },
-  { id: 2, title: 'Set Initial Price & Range' },
-  { id: 3, title: 'Enter Deposit Amount' },
-  { id: 4, title: 'Confirm & Create Pool' },
+  { id: 2, title: 'Set initial Liquidity Deposit' },
+  { id: 3, title: 'Confirm and Review Pool Details' },
+  { id: 4, title: 'Approve & Create Pool Transaction' },
 ];
 
 export default function StepSidebar({ step }: StepSidebarProps) {

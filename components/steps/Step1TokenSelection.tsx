@@ -2,16 +2,7 @@
 import React from 'react';
 import TokenSelector from '../ui/TokenSelector';
 import { tokenList } from '@/constants';
-
-interface Step1Props {
-  tokenA: string | null;
-  tokenB: string | null;
-  feeTier: number | null;
-  setTokenA: (token: string) => void;
-  setTokenB: (token: string) => void;
-  setFeeTier: (fee: number) => void;
-  onNext: () => void;
-}
+import { Step1Props } from '@/types/interfaces';
 
 // ───── Fee options ─────
 const feeOptions = [

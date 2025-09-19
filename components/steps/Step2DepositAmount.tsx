@@ -1,6 +1,8 @@
 'use client';
 
 import React from 'react';
+import PoolHeader from '@/components/create-pool/PoolHeader';
+import TokenIcon from '@/components/ui/TokenIcon';
 import { tokenList } from '@/constants';
 
 interface Step2DepositAmountProps {
@@ -12,6 +14,11 @@ interface Step2DepositAmountProps {
   onBack: () => void;
   poolReserves?: { reserveA: number; reserveB: number } | null;
   setAmounts: (amountA: number, amountB: number) => void;
+  // Optional market prices
+  marketPriceAperB?: number; // 1 tokenA = x tokenB
+  marketPriceBperA?: number; // 1 tokenB = x tokenA
+  marketPriceAInUSD?: number; // $ value for tokenA
+  marketPriceBInUSD?: number; // $ value for tokenB
 }
 
 export default function Step2DepositAmount({
@@ -23,65 +30,128 @@ export default function Step2DepositAmount({
   onNext,
   onBack,
   poolReserves,
+  marketPriceAperB = 1,
+  marketPriceBperA = 1,
+  marketPriceAInUSD,
+  marketPriceBInUSD,
 }: Step2DepositAmountProps) {
   const tokenObjA = tokenList.find((t) => t.address === tokenA);
   const tokenObjB = tokenList.find((t) => t.address === tokenB);
 
+  /** ------------------ Bidirectional input updates ------------------ */
+  const handleAmountAChange = (val: number) => {
+    const newAmountB = val > 0 ? val * marketPriceAperB : 0;
+    setAmounts(val, newAmountB);
+  };
+
+  const handleAmountBChange = (val: number) => {
+    const newAmountA = val > 0 ? val * marketPriceBperA : 0;
+    setAmounts(newAmountA, val);
+  };
+
+  const isValid = amountA > 0 && amountB > 0;
+
   return (
-    <div className="space-y-6 w-full max-w-lg mx-auto p-6 bg-[#2A0040] border border-[#AB37FF33] rounded-2xl shadow-[0_0_40px_#AB37FF33]">
-      <h1 className="text-2xl font-bold text-white text-center drop-shadow-[0_0_10px_#AB37FFAA]">
-        Deposit Token Amounts
-      </h1>
+    <div className="w-full max-w-lg mx-auto space-y-6">
+      {/* Pool header */}
+      <PoolHeader
+        tokenA={tokenObjA ?? { symbol: '', address: '' }}
+        tokenB={tokenObjB ?? { symbol: '', address: '' }}
+        feeTier="0.3%"
+        impliedPrice={marketPriceAperB} // always market ratio
+      />
 
-      {/* Token Labels */}
-      <div className="grid grid-cols-2 gap-6">
-        <div>
-          <label className="block mb-2 text-white/80 font-semibold text-lg">
-            {tokenObjA?.symbol ?? 'Token A'}
-          </label>
-          <input
-            type="number"
-            value={amountA}
-            onChange={(e) => setAmounts(Number(e.target.value), amountB)}
-            className="w-full px-4 py-3 rounded-xl bg-white/10 text-white border border-[#3e37ff33] focus:outline-none focus:ring-2 focus:ring-[#AB37FF66] text-lg transition"
-          />
+      <div className="p-6 bg-[#2A0040] border border-[#AB37FF33] rounded-2xl shadow-[0_0_40px_#AB37FF33] text-left">
+        <h1 className="text-2xl font-bold text-white drop-shadow-[0_0_10px_#AB37FFAA]">
+          Deposit tokens
+        </h1>
+        <h3 className="text-white/80 text-sm mt-1">
+          Specify the token amounts for your liquidity contribution.
+        </h3>
+
+        {/* Token inputs */}
+        <div className="space-y-4 mt-4">
+          {/** Token A input */}
+          <div className="relative w-full">
+            <input
+              type="text"
+              inputMode="decimal"
+              value={amountA || ''}
+              onChange={(e) => handleAmountAChange(Number(e.target.value))}
+              className="w-full px-4 pr-24 py-3 rounded-xl bg-white/10 text-white border border-[#3e37ff33] focus:outline-none focus:ring-2 focus:ring-[#AB37FF66] text-lg"
+              placeholder="0"
+            />
+            <div className="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col items-end gap-1">
+              <div className="flex items-center gap-2">
+                <TokenIcon address={tokenA ?? ''} size={20} />
+                <span className="text-white font-bold">
+                  {tokenObjA?.symbol}
+                </span>
+              </div>
+              {marketPriceAInUSD !== undefined && (
+                <span className="text-white/60 text-xs">
+                  ${(amountA * marketPriceAInUSD).toFixed(2)}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/** Token B input */}
+          <div className="relative w-full">
+            <input
+              type="text"
+              inputMode="decimal"
+              value={amountB || ''}
+              onChange={(e) => handleAmountBChange(Number(e.target.value))}
+              className="w-full px-4 pr-24 py-3 rounded-xl bg-white/10 text-white border border-[#3e37ff33] focus:outline-none focus:ring-2 focus:ring-[#AB37FF66] text-lg"
+              placeholder="0"
+            />
+            <div className="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col items-end gap-1">
+              <div className="flex items-center gap-2">
+                <TokenIcon address={tokenB ?? ''} size={20} />
+                <span className="text-white font-bold">
+                  {tokenObjB?.symbol}
+                </span>
+              </div>
+              {marketPriceBInUSD !== undefined && (
+                <span className="text-white/60 text-xs">
+                  ${(amountB * marketPriceBInUSD).toFixed(2)}
+                </span>
+              )}
+            </div>
+          </div>
         </div>
 
-        <div>
-          <label className="block mb-2 text-white/80 font-semibold text-lg">
-            {tokenObjB?.symbol ?? 'Token B'}
-          </label>
-          <input
-            type="number"
-            value={amountB}
-            onChange={(e) => setAmounts(amountA, Number(e.target.value))}
-            className="w-full px-4 py-3 rounded-xl bg-white/10 text-white border border-[#3e37ff33] focus:outline-none focus:ring-2 focus:ring-[#AB37FF66] text-lg transition"
-          />
+        {!poolReserves && (
+          <p className="mt-2 text-yellow-400 text-xs text-center">
+            ⚠️ You are setting the initial price for this pool. If your ratio
+            differs from the market, arbitrageurs may rebalance it and you could
+            lose value immediately.
+          </p>
+        )}
+
+        {/* Navigation buttons */}
+        <div className="flex justify-between mt-6">
+          <button
+            onClick={onBack}
+            className="py-3 px-6 bg-gray-600 hover:bg-gray-700 rounded-full text-white font-bold text-lg transition-all duration-200 shadow-[0_0_20px_#AB37FF88]"
+          >
+            Back
+          </button>
+          <button
+            onClick={onNext}
+            disabled={!isValid}
+            className={`py-3 px-6 rounded-full font-bold text-lg transition-all duration-200 shadow-[0_0_20px_#AB37FF88] 
+              ${
+                isValid
+                  ? 'bg-purple-600 hover:bg-purple-700 text-white'
+                  : 'bg-gray-500 cursor-not-allowed text-white/50'
+              }
+            `}
+          >
+            Next
+          </button>
         </div>
-      </div>
-
-      {/* Optional pool reserves */}
-      {poolReserves && (
-        <p className="text-white/70 text-sm">
-          Pool Reserves: {tokenObjA?.symbol} {poolReserves.reserveA},{' '}
-          {tokenObjB?.symbol} {poolReserves.reserveB}
-        </p>
-      )}
-
-      {/* Navigation buttons */}
-      <div className="flex justify-between mt-6">
-        <button
-          onClick={onBack}
-          className="py-3 px-6 bg-gray-600 hover:bg-gray-700 rounded-full text-white font-bold text-lg transition-all duration-200 shadow-[0_0_20px_#AB37FF88]"
-        >
-          Back
-        </button>
-        <button
-          onClick={onNext}
-          className="py-3 px-6 bg-purple-600 hover:bg-purple-700 rounded-full text-white font-bold text-lg transition-all duration-200 shadow-[0_0_20px_#AB37FF88]"
-        >
-          Next
-        </button>
       </div>
     </div>
   );

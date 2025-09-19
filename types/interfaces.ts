@@ -1,3 +1,5 @@
+import type { Dispatch, SetStateAction } from 'react';
+
 export interface Token {
   address: `0x${string}`;
   symbol: string;
@@ -159,4 +161,36 @@ export interface SwapSettingsModalProps {
   onClose: () => void;
   slippage: number;
   setSlippage: (val: number) => void;
+}
+
+export interface Step1Props {
+  tokenA: string | null;
+  tokenB: string | null;
+  feeTier: number | null;
+  setTokenA: (token: string) => void;
+  setTokenB: (token: string) => void;
+  setFeeTier: (fee: number) => void;
+  onNext: () => void;
+}
+
+export interface StepMultistepProps {
+  step: number;
+  setStep: Dispatch<SetStateAction<number>>;
+  tokenA: string | null;
+  tokenB: string | null;
+  setTokenA: Dispatch<SetStateAction<string | null>>;
+  setTokenB: Dispatch<SetStateAction<string | null>>;
+  feeTier: number | null;
+  setFeeTier: Dispatch<SetStateAction<number | null>>;
+  amountA: number;
+  amountB: number;
+  setAmounts: (a: number, b: number) => void;
+  pool?: Pool | null;
+  poolExists?: boolean;
+  isPending?: boolean;
+  isConfirming?: boolean;
+  hash?: string;
+  isPoolLoading?: boolean;
+  localError?: { shortMessage?: string; message?: string } | null;
+  onCreatePool?: () => void;
 }

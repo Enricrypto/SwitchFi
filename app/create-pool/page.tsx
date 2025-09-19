@@ -122,30 +122,32 @@ const CreatePoolPage = () => {
     <div className="min-h-screen bg-gradient-to-br from-[#120023] via-[#1B002B] to-[#2B003D] text-white font-sans">
       <div className="flex items-start justify-center p-6 mt-18 gap-8">
         <StepSidebar step={step} />
-        <StepMultiStep
-          step={step}
-          setStep={setStep}
-          tokenA={tokenA}
-          tokenB={tokenB}
-          setTokenA={setTokenA}
-          setTokenB={setTokenB}
-          feeTier={feeTier}
-          setFeeTier={setFeeTier}
-          amountA={amountA}
-          amountB={amountB}
-          setAmounts={(a, b) => {
-            setAmountA(a);
-            setAmountB(b);
-          }}
-          pool={pool}
-          poolExists={poolExists}
-          isPending={isPending}
-          isConfirming={isConfirming}
-          localError={localError}
-          hash={hash}
-          isPoolLoading={false} // you can optionally show a loader if fetchAllPools is running
-          onCreatePool={handleCreatePool}
-        />
+        <div className="w-full max-w-lg">
+          <StepMultiStep
+            step={step}
+            setStep={setStep}
+            tokenA={tokenA}
+            tokenB={tokenB}
+            setTokenA={setTokenA}
+            setTokenB={setTokenB}
+            feeTier={feeTier}
+            setFeeTier={setFeeTier}
+            amountA={amountA}
+            amountB={amountB}
+            setAmounts={(a, b) => {
+              setAmountA(a);
+              setAmountB(b);
+            }}
+            pool={pool}
+            poolExists={poolExists}
+            isPending={isPending}
+            isConfirming={isConfirming}
+            localError={localError}
+            hash={hash}
+            isPoolLoading={false} // you can optionally show a loader if fetchAllPools is running
+            onCreatePool={handleCreatePool}
+          />
+        </div>
       </div>
     </div>
   );

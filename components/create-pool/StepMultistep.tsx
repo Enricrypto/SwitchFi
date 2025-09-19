@@ -1,31 +1,8 @@
 'use client';
 
-import { Dispatch, SetStateAction } from 'react';
-import { Pool } from '@/types/interfaces';
+import { StepMultistepProps } from '@/types/interfaces';
 import Step1TokenSelection from '@/components/steps/Step1TokenSelection';
 import Step2DepositAmount from '@/components/steps/Step2DepositAmount';
-
-interface StepMultistepProps {
-  step: number;
-  setStep: Dispatch<SetStateAction<number>>;
-  tokenA: string | null;
-  tokenB: string | null;
-  setTokenA: Dispatch<SetStateAction<string | null>>;
-  setTokenB: Dispatch<SetStateAction<string | null>>;
-  feeTier: number | null;
-  setFeeTier: Dispatch<SetStateAction<number | null>>;
-  amountA: number;
-  amountB: number;
-  setAmounts: (a: number, b: number) => void;
-  pool?: Pool | null;
-  poolExists?: boolean;
-  isPending?: boolean;
-  isConfirming?: boolean;
-  hash?: string;
-  isPoolLoading?: boolean;
-  localError?: { shortMessage?: string; message?: string } | null;
-  onCreatePool?: () => void;
-}
 
 export default function StepMultistep({
   step,
