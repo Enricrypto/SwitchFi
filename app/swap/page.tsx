@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Header from '../../components/ui/Header';
 import SwapForm from '../../components/ui/SwapForm';
 import { SwapSettingsModal } from '../../components/modals/SwapSettings';
 
@@ -12,9 +11,6 @@ export default function SwapPage() {
 
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-[#120023] via-[#1B002B] to-[#2B003D] text-white font-sans overflow-hidden">
-      {/* ───── Page Header ───── */}
-      <Header />
-
       {/* ───── Swap Form ───── */}
       <SwapForm
         onToggleSettings={() => setIsSettingsOpen(true)}
