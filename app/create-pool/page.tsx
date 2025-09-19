@@ -26,7 +26,6 @@ const CreatePoolPage = () => {
   const router = useRouter();
 
   // ───── Token Selection State ─────
-  // ───── Token Selection State ─────
   const [tokenA, setTokenA] = useState<`0x${string}`>(tokenList[0].address);
   const [tokenASelected, setTokenASelected] = useState(false);
 
@@ -34,11 +33,9 @@ const CreatePoolPage = () => {
   const [tokenBSelected, setTokenBSelected] = useState(false);
 
   // ───── Pool State ─────
-  // ───── Pool State ─────
   const [poolExists, setPoolExists] = useState(false);
   const [localError, setLocalError] = useState<BaseError | null>(null);
 
-  // ───── Simulate contract write (to get calldata) ─────
   // ───── Simulate contract write (to get calldata) ─────
   const { data } = useSimulateContract({
     address: factoryAddress,
@@ -48,16 +45,13 @@ const CreatePoolPage = () => {
   });
 
   // ───── Execute contract write ─────
-  // ───── Execute contract write ─────
   const { data: hash, error, writeContract, isPending } = useWriteContract();
 
-  // ───── Track transaction confirmation status ─────
   // ───── Track transaction confirmation status ─────
   const { isLoading: isConfirming, isSuccess: isConfirmed } =
     useWaitForTransactionReceipt({ hash });
   useWaitForTransactionReceipt({ hash });
 
-  // ───── Fetch existing pool address (if any) ─────
   // ───── Fetch existing pool address (if any) ─────
   const {
     data: poolAddress,
@@ -71,7 +65,6 @@ const CreatePoolPage = () => {
   });
 
   // ───── Check if pool exists ─────
-  // ───── Check if pool exists ─────
   useEffect(() => {
     if (poolAddress && poolAddress !== zeroAddress) {
       setPoolExists(true);
@@ -81,14 +74,12 @@ const CreatePoolPage = () => {
   }, [poolAddress]);
 
   // ───── Refetch pool address on confirmation ─────
-  // ───── Refetch pool address on confirmation ─────
   useEffect(() => {
     if (isConfirmed) {
       refetchPoolAddress();
     }
   }, [isConfirmed, refetchPoolAddress]);
 
-  // ───── Navigate after pool is confirmed and exists ─────
   // ───── Navigate after pool is confirmed and exists ─────
   useEffect(() => {
     if (isConfirmed && poolAddress && poolAddress !== zeroAddress) {
@@ -97,7 +88,6 @@ const CreatePoolPage = () => {
     }
   }, [isConfirmed, poolAddress, router]);
 
-  // ───── Handle transaction errors ─────
   // ───── Handle transaction errors ─────
   useEffect(() => {
     if (!error) return;
@@ -122,12 +112,10 @@ const CreatePoolPage = () => {
   }, [error]);
 
   // ───── Clear local error when tokens change ─────
-  // ───── Clear local error when tokens change ─────
   useEffect(() => {
     setLocalError(null);
   }, [tokenA, tokenB]);
 
-  // ───── Main action: Create pool ─────
   // ───── Main action: Create pool ─────
   const handleCreatePool = () => {
     if (!isConnected) {
