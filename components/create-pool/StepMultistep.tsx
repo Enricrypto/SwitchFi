@@ -3,6 +3,7 @@
 import { StepMultistepProps } from '@/types/interfaces';
 import Step1TokenSelection from '@/components/steps/Step1TokenSelection';
 import Step2DepositAmount from '@/components/steps/Step2DepositAmount';
+import Step3Review from '@/components/steps/Step3Review';
 
 export default function StepMultistep({
   step,
@@ -17,17 +18,16 @@ export default function StepMultistep({
   amountB,
   setAmounts,
   pool,
-  poolExists,
-  isPending,
-  isConfirming,
-  hash,
-  isPoolLoading,
-  localError,
-  onCreatePool,
+  // poolExists,
+  // isPending,
+  // isConfirming,
+  // hash,
+  // isPoolLoading,
+  // localError,
+  // onCreatePool,
+  reviewData,
+  setReviewData,
 }: StepMultistepProps) {
-  // optional local state for step-specific inputs
-  // Step 2: deposit amounts
-  // could also be lifted to parent if needed in step 4
   const handleNext = () => setStep((s) => s + 1);
   const handleBack = () => setStep((s) => s - 1);
 
@@ -62,25 +62,21 @@ export default function StepMultistep({
           setAmounts={setAmounts}
           onNext={handleNext}
           onBack={handleBack}
+          setReviewData={setReviewData}
         />
       )}
 
-      {/* {step === 3 && (
-        <Step3DepositAmount onNext={handleNext} onBack={handleBack} />
-      )} */}
-
-      {/* {step === 4 && (
-        <Step4Confirm
+      {step === 3 && (
+        <Step3Review
+          tokenA={tokenA}
+          tokenB={tokenB}
+          amountA={amountA}
+          amountB={amountB}
+          reviewData={reviewData} // <-- pass the whole object
+          onConfirm={handleNext}
           onBack={handleBack}
-          onCreatePool={onCreatePool}
-          poolExists={poolExists}
-          isPending={isPending}
-          isConfirming={isConfirming}
-          hash={hash}
-          isPoolLoading={isPoolLoading}
-          localError={localError}
         />
-      )} */}
+      )}
     </>
   );
 }

@@ -1,25 +1,10 @@
 'use client';
 
-import React from 'react';
+import { useEffect } from 'react';
 import PoolHeader from '@/components/create-pool/PoolHeader';
 import TokenIcon from '@/components/ui/TokenIcon';
 import { tokenList } from '@/constants';
-
-interface Step2DepositAmountProps {
-  tokenA: string | null;
-  tokenB: string | null;
-  amountA: number;
-  amountB: number;
-  onNext: () => void;
-  onBack: () => void;
-  poolReserves?: { reserveA: number; reserveB: number } | null;
-  setAmounts: (amountA: number, amountB: number) => void;
-  // Optional market prices
-  marketPriceAperB?: number; // 1 tokenA = x tokenB
-  marketPriceBperA?: number; // 1 tokenB = x tokenA
-  marketPriceAInUSD?: number; // $ value for tokenA
-  marketPriceBInUSD?: number; // $ value for tokenB
-}
+import { Step2DepositAmountProps } from '@/types/interfaces';
 
 export default function Step2DepositAmount({
   tokenA,
@@ -30,13 +15,22 @@ export default function Step2DepositAmount({
   onNext,
   onBack,
   poolReserves,
-  marketPriceAperB = 1,
-  marketPriceBperA = 1,
-  marketPriceAInUSD,
-  marketPriceBInUSD,
+  setReviewData,
 }: Step2DepositAmountProps) {
   const tokenObjA = tokenList.find((t) => t.address === tokenA);
   const tokenObjB = tokenList.find((t) => t.address === tokenB);
+
+  // ------------------ Compute market prices ------------------
+  const marketPriceAperB = poolReserves
+    ? poolReserves.reserveB / poolReserves.reserveA
+    : 1; // use 1 as default for initial price
+
+  const marketPriceBperA = poolReserves
+    ? poolReserves.reserveA / poolReserves.reserveB
+    : 1;
+
+  const marketPriceAInUSD = 1; // optionally compute real USD price
+  const marketPriceBInUSD = 1;
 
   /** ------------------ Bidirectional input updates ------------------ */
   const handleAmountAChange = (val: number) => {
@@ -50,6 +44,18 @@ export default function Step2DepositAmount({
   };
 
   const isValid = amountA > 0 && amountB > 0;
+
+  // ------------------ Push computed data up ------------------
+  useEffect(() => {
+    setReviewData({
+      impliedPriceAperB: amountB / amountA,
+      impliedPriceBperA: amountA / amountB,
+      marketPriceAperB,
+      marketPriceBperA,
+      marketPriceAInUSD,
+      marketPriceBInUSD,
+    });
+  }, [amountA, amountB, marketPriceAperB, marketPriceBperA, setReviewData]);
 
   return (
     <div className="w-full max-w-lg mx-auto space-y-6">

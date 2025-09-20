@@ -173,6 +173,15 @@ export interface Step1Props {
   onNext: () => void;
 }
 
+export type ReviewData = {
+  impliedPriceAperB?: number;
+  impliedPriceBperA?: number;
+  marketPriceAperB?: number;
+  marketPriceBperA?: number;
+  marketPriceAInUSD?: number;
+  marketPriceBInUSD?: number;
+};
+
 export interface StepMultistepProps {
   step: number;
   setStep: Dispatch<SetStateAction<number>>;
@@ -193,4 +202,31 @@ export interface StepMultistepProps {
   isPoolLoading?: boolean;
   localError?: { shortMessage?: string; message?: string } | null;
   onCreatePool?: () => void;
+  reviewData: ReviewData;
+  setReviewData: Dispatch<SetStateAction<ReviewData>>;
+}
+
+export interface Step2DepositAmountProps {
+  tokenA: string | null;
+  tokenB: string | null;
+  poolReserves?: {
+    reserveA: number;
+    reserveB: number;
+  };
+  amountA: number;
+  amountB: number;
+  setAmounts: (a: number, b: number) => void;
+  onNext: () => void;
+  onBack: () => void;
+  setReviewData: Dispatch<SetStateAction<ReviewData>>;
+}
+
+export interface Step3ReviewProps {
+  tokenA: string | null;
+  tokenB: string | null;
+  amountA: number;
+  amountB: number;
+  reviewData: ReviewData; // <-- all computed numbers here
+  onConfirm: () => void;
+  onBack: () => void;
 }

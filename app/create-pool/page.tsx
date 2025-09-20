@@ -25,9 +25,18 @@ const CreatePoolPage = () => {
   /** ------------------ Step 1 State (tokens, fee & amounts) ------------------ */
   const [tokenA, setTokenA] = useState<string | null>(null);
   const [tokenB, setTokenB] = useState<string | null>(null);
-  const [feeTier, setFeeTier] = useState<number | null>(null);
+  const [feeTier, setFeeTier] = useState<number | null>(0.25);
   const [amountA, setAmountA] = useState<number>(0);
   const [amountB, setAmountB] = useState<number>(0);
+
+  const [reviewData, setReviewData] = useState<{
+    impliedPriceAperB?: number;
+    impliedPriceBperA?: number;
+    marketPriceAperB?: number;
+    marketPriceBperA?: number;
+    marketPriceAInUSD?: number;
+    marketPriceBInUSD?: number;
+  }>({});
 
   /** ------------------ Pool Existence & Errors ------------------ */
   const [localError, setLocalError] = useState<BaseError | null>(null);
@@ -146,6 +155,8 @@ const CreatePoolPage = () => {
             hash={hash}
             isPoolLoading={false} // you can optionally show a loader if fetchAllPools is running
             onCreatePool={handleCreatePool}
+            reviewData={reviewData}
+            setReviewData={setReviewData}
           />
         </div>
       </div>
