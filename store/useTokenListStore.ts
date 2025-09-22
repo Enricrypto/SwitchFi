@@ -1,29 +1,60 @@
 import { create } from 'zustand';
-import { TokenListState } from '../types/interfaces';
+import axios from 'axios';
+import {
+  TokenListState,
+  Token,
+  TokenListResponse,
+  CoinGeckoPriceResponse,
+} from '../types/interfaces';
 
-// Create a Zustand store to manage the token list state globally
 export const useTokenListStore = create<TokenListState>((set) => ({
-  tokenList: [], // Holds the array of tokens fetched from CoinGecko
-  isLoading: false, // Tracks whether the token list is currently loading
-  error: undefined, // Holds any error message if fetching fails
+  tokenList: [] as Token[],
+  tokenMap: {} as Record<string, Token>, // for fast lookup by address
+  prices: {} as Record<string, number>, // USD prices
+  isLoading: false,
+  error: undefined,
 
-  // Async action to fetch the token list from the CoinGecko endpoint
   fetchTokenList: async () => {
-    set({ isLoading: true }); // Set loading to true before fetch starts
+    set({ isLoading: true, error: undefined });
 
     try {
-      // Fetch token list JSON from CoinGecko's Uniswap token list URL
-      const res = await fetch('https://tokens.coingecko.com/uniswap/all.json');
-      const data = await res.json();
+      const res = await axios.get<TokenListResponse>(
+        'https://tokens.coingecko.com/arbitrum-one/all.json'
+      );
 
-      // Update the store with the fetched tokens and mark loading as false
-      set({ tokenList: data.tokens, isLoading: false });
+      const tokens: Token[] = res.data.tokens.map((t) => ({
+        address: t.address.toLowerCase() as `0x${string}`,
+        name: t.name,
+        symbol: t.symbol,
+        decimals: t.decimals,
+        logoURI: t.logoURI,
+      }));
+
+      const tokenMap: Record<string, Token> = {};
+      tokens.forEach((t) => (tokenMap[t.address] = t));
+
+      set({ tokenList: tokens, tokenMap, isLoading: false });
     } catch (err) {
-      // Log error to console for debugging
       console.error('Failed to fetch token list', err);
-
-      // Update store with error message and mark loading as false
       set({ error: 'Failed to fetch token list', isLoading: false });
+    }
+  },
+
+  fetchPrices: async (addresses: string[]) => {
+    if (!addresses.length) return;
+    try {
+      const ids = addresses.map((a) => a.toLowerCase()).join(',');
+      const url = `https://api.coingecko.com/api/v3/simple/token_price/arbitrum-one?contract_addresses=${ids}&vs_currencies=usd`;
+      const res = await axios.get<CoinGeckoPriceResponse>(url);
+
+      const prices: Record<string, number> = {};
+      Object.entries(res.data).forEach(([address, data]) => {
+        prices[address.toLowerCase()] = data.usd;
+      });
+
+      set((state) => ({ prices: { ...state.prices, ...prices } }));
+    } catch (err) {
+      console.error('Failed to fetch token prices', err);
     }
   },
 }));

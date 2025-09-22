@@ -24,7 +24,9 @@ const PoolHeader = ({
         <span>/</span>
         <TokenIcon address={tokenB.address} size={24} />
         <span>{tokenB.symbol}</span>
-        <div className="text-sm text-white/80">{feeTier}</div>
+        <div className="text-sm text-white/80">
+          {feeTier !== null ? `${feeTier}%` : '0.3%'}
+        </div>
       </div>
 
       {/* Market price / implied ratio */}

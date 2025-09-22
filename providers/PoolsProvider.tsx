@@ -2,26 +2,26 @@
 
 import { useEffect } from 'react';
 import { usePoolsStore } from '../store/usePoolsStore';
-import { usePublicClient } from 'wagmi';
 import { useAccount } from 'wagmi';
+import { publicClient } from '@/clients/viemClient';
 
 function PoolsProvider() {
   const { address: userAddress } = useAccount();
-  const publicClient = usePublicClient();
-
   const fetchAllPools = usePoolsStore((state) => state.fetchAllPools);
   const fetchUserPools = usePoolsStore((state) => state.fetchUserPools);
 
   useEffect(() => {
     if (!publicClient) return;
 
-    fetchAllPools(publicClient);
+    const loadPools = async () => {
+      await fetchAllPools(publicClient);
+      if (userAddress) {
+        await fetchUserPools(userAddress, publicClient);
+      }
+    };
 
-    if (!userAddress) return;
-    if (userAddress) {
-      fetchUserPools(userAddress, publicClient);
-    }
-  }, [publicClient, userAddress, fetchAllPools, fetchUserPools]);
+    loadPools();
+  }, [userAddress, fetchAllPools, fetchUserPools]);
 
   return null; // this component just manages fetching in global state
 }

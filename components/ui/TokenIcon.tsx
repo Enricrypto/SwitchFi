@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useTokenListStore } from '../../store/useTokenListStore';
+import { useTokenListStore } from '@/store/useTokenListStore';
 
 type Props = {
   address: string;

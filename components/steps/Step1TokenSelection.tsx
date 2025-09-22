@@ -1,7 +1,8 @@
-// components/steps/Step1TokenSelection.tsx
-import React from 'react';
+'use client';
+
+import { useEffect } from 'react';
 import TokenSelector from '../ui/TokenSelector';
-import { tokenList } from '@/constants';
+import { useTokenListStore } from '@/store/useTokenListStore';
 import { Step1Props } from '@/types/interfaces';
 
 // ───── Fee options ─────
@@ -19,6 +20,14 @@ export default function Step1TokenSelection({
   setFeeTier,
   onNext,
 }: Step1Props) {
+  const tokenList = useTokenListStore((state) => state.tokenList);
+  const fetchTokenList = useTokenListStore((state) => state.fetchTokenList);
+  // const isLoading = useTokenListStore((state) => state.isLoading);
+
+  useEffect(() => {
+    fetchTokenList();
+  }, [fetchTokenList]);
+
   // ───── Dynamic Button Text ─────
   let buttonText = 'Select Base Token';
   if (tokenA && !tokenB) buttonText = 'Select Quote Token';
@@ -42,7 +51,6 @@ export default function Step1TokenSelection({
             tokenA ? tokenList.find((t) => t.address === tokenA) : undefined
           }
           onSelect={(t) => setTokenA(t.address)}
-          tokens={tokenList.filter((t) => t.address !== tokenB)}
           placeholder="Select"
           label="Base Token"
         />
@@ -51,7 +59,6 @@ export default function Step1TokenSelection({
             tokenB ? tokenList.find((t) => t.address === tokenB) : undefined
           }
           onSelect={(t) => setTokenB(t.address)}
-          tokens={tokenList.filter((t) => t.address !== tokenA)}
           placeholder="Select"
           label="Quote Token"
         />

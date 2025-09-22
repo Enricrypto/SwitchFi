@@ -1,5 +1,6 @@
 'use client';
 
+import { useTokenListStore } from '@/store/useTokenListStore';
 import { StepMultistepProps } from '@/types/interfaces';
 import Step1TokenSelection from '@/components/steps/Step1TokenSelection';
 import Step2DepositAmount from '@/components/steps/Step2DepositAmount';
@@ -31,12 +32,23 @@ export default function StepMultistep({
   const handleNext = () => setStep((s) => s + 1);
   const handleBack = () => setStep((s) => s - 1);
 
+  const tokenList = useTokenListStore((state) => state.tokenList);
+
+  const tokenObjA = tokenList.find((t) => t.address === tokenA) ?? {
+    symbol: '',
+    address: '',
+  };
+  const tokenObjB = tokenList.find((t) => t.address === tokenB) ?? {
+    symbol: '',
+    address: '',
+  };
+
   return (
     <>
       {step === 1 && (
         <Step1TokenSelection
-          tokenA={tokenA}
-          tokenB={tokenB}
+          tokenA={tokenA ?? ''}
+          tokenB={tokenB ?? ''}
           feeTier={feeTier}
           setTokenA={setTokenA}
           setTokenB={setTokenB}
@@ -47,8 +59,13 @@ export default function StepMultistep({
 
       {step === 2 && (
         <Step2DepositAmount
-          tokenA={tokenA}
-          tokenB={tokenB}
+          tokenA={tokenA ?? ''}
+          tokenB={tokenB ?? ''}
+          tokenObjA={tokenObjA} // pass the resolved object
+          tokenObjB={tokenObjB} // pass the resolved object
+          amountA={amountA}
+          amountB={amountB}
+          setAmounts={setAmounts}
           poolReserves={
             pool
               ? {
@@ -57,12 +74,10 @@ export default function StepMultistep({
                 }
               : undefined
           }
-          amountA={amountA}
-          amountB={amountB}
-          setAmounts={setAmounts}
           onNext={handleNext}
           onBack={handleBack}
           setReviewData={setReviewData}
+          feeTier={feeTier}
         />
       )}
 

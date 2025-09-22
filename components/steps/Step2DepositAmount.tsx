@@ -1,14 +1,16 @@
 'use client';
 
 import { useEffect } from 'react';
+import { useTokenListStore } from '@/store/useTokenListStore';
 import PoolHeader from '@/components/create-pool/PoolHeader';
 import TokenIcon from '@/components/ui/TokenIcon';
-import { tokenList } from '@/constants';
 import { Step2DepositAmountProps } from '@/types/interfaces';
 
 export default function Step2DepositAmount({
   tokenA,
   tokenB,
+  tokenObjA,
+  tokenObjB,
   amountA,
   amountB,
   setAmounts,
@@ -16,9 +18,20 @@ export default function Step2DepositAmount({
   onBack,
   poolReserves,
   setReviewData,
+  feeTier,
 }: Step2DepositAmountProps) {
-  const tokenObjA = tokenList.find((t) => t.address === tokenA);
-  const tokenObjB = tokenList.find((t) => t.address === tokenB);
+  const tokenList = useTokenListStore((state) => state.tokenList);
+
+  // Use the passed tokenObj if available; otherwise, lookup in tokenList
+  const tokenAData =
+    tokenObjA ??
+    tokenList.find((t) => t.address === tokenA) ??
+    ({ symbol: '', address: '' } as const);
+
+  const tokenBData =
+    tokenObjB ??
+    tokenList.find((t) => t.address === tokenB) ??
+    ({ symbol: '', address: '' } as const);
 
   // ------------------ Compute market prices ------------------
   const marketPriceAperB = poolReserves
@@ -61,10 +74,10 @@ export default function Step2DepositAmount({
     <div className="w-full max-w-lg mx-auto space-y-6">
       {/* Pool header */}
       <PoolHeader
-        tokenA={tokenObjA ?? { symbol: '', address: '' }}
-        tokenB={tokenObjB ?? { symbol: '', address: '' }}
-        feeTier="0.3%"
-        impliedPrice={marketPriceAperB} // always market ratio
+        tokenA={tokenAData}
+        tokenB={tokenBData}
+        feeTier={feeTier}
+        impliedPrice={marketPriceAperB}
       />
 
       <div className="p-6 bg-[#2A0040] border border-[#AB37FF33] rounded-2xl shadow-[0_0_40px_#AB37FF33] text-left">
@@ -89,9 +102,9 @@ export default function Step2DepositAmount({
             />
             <div className="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col items-end gap-1">
               <div className="flex items-center gap-2">
-                <TokenIcon address={tokenA ?? ''} size={20} />
+                <TokenIcon address={tokenAData.address} size={20} />
                 <span className="text-white font-bold">
-                  {tokenObjA?.symbol}
+                  {tokenAData.symbol}
                 </span>
               </div>
               {marketPriceAInUSD !== undefined && (
@@ -114,9 +127,9 @@ export default function Step2DepositAmount({
             />
             <div className="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col items-end gap-1">
               <div className="flex items-center gap-2">
-                <TokenIcon address={tokenB ?? ''} size={20} />
+                <TokenIcon address={tokenBData.address} size={20} />
                 <span className="text-white font-bold">
-                  {tokenObjB?.symbol}
+                  {tokenBData.symbol}
                 </span>
               </div>
               {marketPriceBInUSD !== undefined && (

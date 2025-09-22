@@ -1,26 +1,41 @@
-import React, { useState } from 'react';
-import { TokenSelectorProps, Token } from '../../types/interfaces';
+import { useState, useMemo } from 'react';
+import { Props } from '@/types/interfaces';
+import { useTokenListStore } from '@/store/useTokenListStore';
 import TokenIcon from './TokenIcon';
 import { ChevronDown } from 'lucide-react';
 import Spinner from './Spinner';
 
-interface Props extends TokenSelectorProps {
-  tokens?: Token[];
-  placeholder?: string;
-  label?: string;
-}
-
 const TokenSelector = ({
   token,
   onSelect,
-  tokens = [],
   placeholder = 'Select',
   label,
 }: Props) => {
+  const tokenList = useTokenListStore((state) => state.tokenList);
+  const isLoading = useTokenListStore((state) => state.isLoading);
+  const prices = useTokenListStore((state) => state.prices);
+
   const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState('');
+
+  // Memoized filtered list
+  const filteredTokens = useMemo(() => {
+    const query = search.trim().toLowerCase();
+
+    // show top 20 if search is empty
+    if (!query) return tokenList.slice(0, 20);
+
+    return tokenList.filter(
+      (t) =>
+        t.symbol.toLowerCase().includes(query) ||
+        t.name.toLowerCase().includes(query) ||
+        t.address.toLowerCase() === query || // exact address match
+        t.address.toLowerCase().startsWith(query) // allow partial match
+    );
+  }, [search, tokenList]);
 
   // Loading state
-  if (!tokens.length) return <Spinner />;
+  if (isLoading) return <Spinner />;
 
   return (
     <div className="relative">
@@ -63,23 +78,52 @@ const TokenSelector = ({
         backdrop-blur-md
       "
         >
-          {tokens.map((t) => (
-            <button
-              key={t.address}
-              type="button"
-              onMouseDown={() => {
-                onSelect(t);
-                setOpen(false);
-              }}
+          {/* 🆕 Search bar */}
+          <div className="sticky top-0 bg-[#1B002B] p-2 border-b border-[#AB37FF33]">
+            <input
+              type="text"
+              placeholder="Search token..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
               className="
-            flex items-center gap-3 w-full text-left px-4 py-3
-            hover:bg-[#2A0040] text-white
-          "
-            >
-              <TokenIcon address={t.address} />
-              <div className="font-medium">{t.symbol}</div>
-            </button>
-          ))}
+                w-full rounded-lg bg-[#2A0040]
+                text-white px-3 py-2 text-sm
+                placeholder-white/40
+                focus:outline-none focus:ring-2 focus:ring-purple-400
+              "
+            />
+          </div>
+
+          {/* 🆕 Show filtered tokens */}
+          {filteredTokens.length === 0 ? (
+            <div className="p-3 text-center text-white/60 text-sm">
+              No tokens found
+            </div>
+          ) : (
+            filteredTokens.map((t) => (
+              <button
+                key={t.address}
+                type="button"
+                onClick={() => {
+                  onSelect(t);
+                  setOpen(false);
+                  setSearch(''); // 🆕 reset search on selection
+                }}
+                className="
+                  flex items-center justify-between w-full text-left px-4 py-3
+                  hover:bg-[#2A0040] text-white
+                "
+              >
+                <div className="flex items-center gap-3">
+                  <TokenIcon address={t.address} />
+                  <div className="font-medium">{t.symbol}</div>
+                </div>
+                <div className="text-sm text-white/70">
+                  ${prices[t.address.toLowerCase()] ?? 'N/A'}
+                </div>
+              </button>
+            ))
+          )}
         </div>
       )}
     </div>

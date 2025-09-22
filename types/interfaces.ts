@@ -1,9 +1,24 @@
 import type { Dispatch, SetStateAction } from 'react';
+import type { PublicClient } from 'viem';
 
 export interface Token {
   address: `0x${string}`;
   symbol: string;
+  name: string;
   decimals: number;
+  logoURI?: string;
+}
+
+export interface TokenListState {
+  tokenList: Token[]; // array of all tokens
+  tokenMap: Record<string, Token>; // mapping for quick lookup by address
+  prices: Record<string, number>; // USD prices for each token
+  isLoading: boolean; // loading state for fetching token list
+  error?: string; // error message if fetching fails
+
+  // Actions
+  fetchTokenList: () => Promise<void>; // fetch token metadata
+  fetchPrices: (addresses: string[]) => Promise<void>; // fetch USD prices for selected tokens
 }
 
 export interface Pool {
@@ -130,6 +145,11 @@ export interface TokenSelectorProps {
   onSelect: (token: Token) => void;
 }
 
+export interface Props extends TokenSelectorProps {
+  placeholder?: string;
+  label?: string;
+}
+
 export interface AmountInputProps {
   value: string;
   onChange: (value: string) => void;
@@ -142,13 +162,6 @@ export interface TokenInfo {
   decimals: number;
   logoURI: string;
   chainId: number;
-}
-
-export interface TokenListState {
-  tokenList: TokenInfo[];
-  isLoading: boolean;
-  error?: string;
-  fetchTokenList: () => Promise<void>;
 }
 
 export interface SwapFormProps {
@@ -207,18 +220,18 @@ export interface StepMultistepProps {
 }
 
 export interface Step2DepositAmountProps {
-  tokenA: string | null;
-  tokenB: string | null;
-  poolReserves?: {
-    reserveA: number;
-    reserveB: number;
-  };
+  tokenA: string;
+  tokenB: string;
+  tokenObjA?: Token;
+  tokenObjB?: Token;
   amountA: number;
   amountB: number;
   setAmounts: (a: number, b: number) => void;
   onNext: () => void;
   onBack: () => void;
+  poolReserves?: { reserveA: number; reserveB: number };
   setReviewData: Dispatch<SetStateAction<ReviewData>>;
+  feeTier: number;
 }
 
 export interface Step3ReviewProps {
@@ -229,4 +242,39 @@ export interface Step3ReviewProps {
   reviewData: ReviewData; // <-- all computed numbers here
   onConfirm: () => void;
   onBack: () => void;
+}
+
+interface CoinGeckoToken {
+  address: string;
+  name: string;
+  symbol: string;
+  decimals: number;
+  logoURI?: string;
+  platforms?: Record<string, string>; // e.g., arbitrum: "0x..."
+}
+
+export interface TokenListResponse {
+  name: string;
+  tokens: CoinGeckoToken[];
+}
+
+export interface CoinGeckoPrice {
+  usd: number;
+}
+
+export type CoinGeckoPriceResponse = Record<string, CoinGeckoPrice>;
+
+export interface PoolsState {
+  allPools: Pool[];
+  userPools: Pool[];
+  isLoadingAllPools: boolean;
+  isLoadingUserPools: boolean;
+  errorAllPools?: string;
+  errorUserPools?: string;
+
+  fetchAllPools: (publicClient: PublicClient) => Promise<void>;
+  fetchUserPools: (
+    userAddress: `0x${string}`,
+    publicClient: PublicClient
+  ) => Promise<void>;
 }
