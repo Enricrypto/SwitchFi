@@ -5,8 +5,8 @@ import TokenIcon from '@/components/ui/TokenIcon';
 interface PoolHeaderProps {
   tokenA: { symbol: string; address: string };
   tokenB: { symbol: string; address: string };
-  feeTier: string; // e.g. '0.3%'
-  impliedPrice?: number | null; // optional
+  feeTier: number;
+  impliedPrice: number;
 }
 
 const PoolHeader = ({

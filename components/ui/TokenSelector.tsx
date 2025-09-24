@@ -10,10 +10,10 @@ const TokenSelector = ({
   onSelect,
   placeholder = 'Select',
   label,
+  onPriceFetch,
 }: Props) => {
   const tokenList = useTokenListStore((state) => state.tokenList);
   const isLoading = useTokenListStore((state) => state.isLoading);
-  const prices = useTokenListStore((state) => state.prices);
 
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
@@ -33,6 +33,20 @@ const TokenSelector = ({
         t.address.toLowerCase().startsWith(query) // allow partial match
     );
   }, [search, tokenList]);
+
+  // -------------------- Price fetch --------------------
+  const fetchPrice = async (address: string) => {
+    if (!onPriceFetch) return;
+    try {
+      const res = await fetch(`/api/prices?addresses=${address}`);
+      const data = await res.json();
+      const price = data[address.toLowerCase()] ?? 0;
+      onPriceFetch(price);
+    } catch (err) {
+      console.warn('Failed to fetch token price:', err);
+      onPriceFetch(0);
+    }
+  };
 
   // Loading state
   if (isLoading) return <Spinner />;
@@ -106,8 +120,9 @@ const TokenSelector = ({
                 type="button"
                 onClick={() => {
                   onSelect(t);
+                  fetchPrice(t.address);
                   setOpen(false);
-                  setSearch(''); // 🆕 reset search on selection
+                  setSearch('');
                 }}
                 className="
                   flex items-center justify-between w-full text-left px-4 py-3
@@ -117,9 +132,6 @@ const TokenSelector = ({
                 <div className="flex items-center gap-3">
                   <TokenIcon address={t.address} />
                   <div className="font-medium">{t.symbol}</div>
-                </div>
-                <div className="text-sm text-white/70">
-                  ${prices[t.address.toLowerCase()] ?? 'N/A'}
                 </div>
               </button>
             ))

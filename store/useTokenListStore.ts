@@ -1,11 +1,6 @@
 import { create } from 'zustand';
 import axios from 'axios';
-import {
-  TokenListState,
-  Token,
-  TokenListResponse,
-  CoinGeckoPriceResponse,
-} from '../types/interfaces';
+import { TokenListState, Token, TokenListResponse } from '../types/interfaces';
 
 export const useTokenListStore = create<TokenListState>((set) => ({
   tokenList: [] as Token[],
@@ -40,21 +35,20 @@ export const useTokenListStore = create<TokenListState>((set) => ({
     }
   },
 
-  fetchPrices: async (addresses: string[]) => {
-    if (!addresses.length) return;
+  fetchPrice: async (address: string) => {
+    if (!address) return;
+
+    const normalized = address.toLowerCase();
     try {
-      const ids = addresses.map((a) => a.toLowerCase()).join(',');
-      const url = `https://api.coingecko.com/api/v3/simple/token_price/arbitrum-one?contract_addresses=${ids}&vs_currencies=usd`;
-      const res = await axios.get<CoinGeckoPriceResponse>(url);
+      const res = await fetch(`/api/prices?address=${normalized}`);
+      const data = await res.json();
+      const price = data[normalized] ?? undefined;
 
-      const prices: Record<string, number> = {};
-      Object.entries(res.data).forEach(([address, data]) => {
-        prices[address.toLowerCase()] = data.usd;
-      });
-
-      set((state) => ({ prices: { ...state.prices, ...prices } }));
+      set((state) => ({
+        prices: { ...state.prices, [normalized]: price },
+      }));
     } catch (err) {
-      console.error('Failed to fetch token prices', err);
+      console.warn('Failed to fetch token price:', err);
     }
   },
 }));

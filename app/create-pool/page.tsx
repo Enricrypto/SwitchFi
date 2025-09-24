@@ -36,6 +36,8 @@ const CreatePoolPage = () => {
     marketPriceBperA?: number;
     marketPriceAInUSD?: number;
     marketPriceBInUSD?: number;
+    tokenAPriceUSD?: number;
+    tokenBPriceUSD?: number;
   }>({});
 
   /** ------------------ Pool Existence & Errors ------------------ */

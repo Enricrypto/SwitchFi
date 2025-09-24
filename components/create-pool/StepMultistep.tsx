@@ -34,14 +34,8 @@ export default function StepMultistep({
 
   const tokenList = useTokenListStore((state) => state.tokenList);
 
-  const tokenObjA = tokenList.find((t) => t.address === tokenA) ?? {
-    symbol: '',
-    address: '',
-  };
-  const tokenObjB = tokenList.find((t) => t.address === tokenB) ?? {
-    symbol: '',
-    address: '',
-  };
+  const tokenObjA = tokenList.find((t) => t.address === tokenA)!;
+  const tokenObjB = tokenList.find((t) => t.address === tokenB)!;
 
   return (
     <>
@@ -77,7 +71,7 @@ export default function StepMultistep({
           onNext={handleNext}
           onBack={handleBack}
           setReviewData={setReviewData}
-          feeTier={feeTier}
+          feeTier={feeTier!}
         />
       )}
 

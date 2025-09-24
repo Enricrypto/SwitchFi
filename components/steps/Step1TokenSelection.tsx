@@ -22,10 +22,14 @@ export default function Step1TokenSelection({
 }: Step1Props) {
   const tokenList = useTokenListStore((state) => state.tokenList);
   const fetchTokenList = useTokenListStore((state) => state.fetchTokenList);
-  // const isLoading = useTokenListStore((state) => state.isLoading);
+  const fetchPrice = useTokenListStore((state) => state.fetchPrice);
 
   useEffect(() => {
-    fetchTokenList();
+    const loadTokens = async () => {
+      await fetchTokenList(); // just fetch the list, no prices
+    };
+
+    loadTokens();
   }, [fetchTokenList]);
 
   // ───── Dynamic Button Text ─────
@@ -50,15 +54,22 @@ export default function Step1TokenSelection({
           token={
             tokenA ? tokenList.find((t) => t.address === tokenA) : undefined
           }
-          onSelect={(t) => setTokenA(t.address)}
+          onSelect={(t) => {
+            setTokenA(t.address);
+            fetchPrice(t.address); // fetch only this token’s price
+          }}
           placeholder="Select"
           label="Base Token"
         />
+
         <TokenSelector
           token={
             tokenB ? tokenList.find((t) => t.address === tokenB) : undefined
           }
-          onSelect={(t) => setTokenB(t.address)}
+          onSelect={(t) => {
+            setTokenB(t.address);
+            fetchPrice(t.address);
+          }}
           placeholder="Select"
           label="Quote Token"
         />

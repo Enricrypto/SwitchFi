@@ -2,7 +2,7 @@
 
 import { Step3ReviewProps } from '@/types/interfaces';
 import TokenIcon from '@/components/ui/TokenIcon';
-import { tokenList } from '@/constants';
+import { useTokenListStore } from '@/store/useTokenListStore';
 
 export default function Step3Review({
   tokenA,
@@ -13,11 +13,14 @@ export default function Step3Review({
   onBack,
   onConfirm,
 }: Step3ReviewProps) {
+  const tokenMap = useTokenListStore((state) => state.tokenMap);
+
+  const tokenObjA = tokenA ? tokenMap[tokenA.toLowerCase()] : undefined;
+  const tokenObjB = tokenB ? tokenMap[tokenB.toLowerCase()] : undefined;
+
   const {
     impliedPriceAperB = 0,
-    impliedPriceBperA = 0,
     marketPriceAperB = 1,
-    marketPriceBperA = 1,
     marketPriceAInUSD = 0,
     marketPriceBInUSD = 0,
   } = reviewData;
@@ -29,9 +32,6 @@ export default function Step3Review({
     marketPriceAperB && impliedPriceAperB
       ? ((impliedPriceAperB - marketPriceAperB) / marketPriceAperB) * 100
       : 0;
-
-  const tokenObjA = tokenList.find((t) => t.address === tokenA);
-  const tokenObjB = tokenList.find((t) => t.address === tokenB);
 
   return (
     <div className="w-full max-w-lg mx-auto space-y-6">
@@ -52,9 +52,10 @@ export default function Step3Review({
 
         {/* Implied price */}
         <div className="flex justify-center items-center gap-4">
-          <p className="text-white/80 text-sm">
-            1 {tokenObjA?.symbol} = {impliedPriceAperB.toFixed(4)}{' '}
+          <p className="text-white/80 text-sm text-center">
+            1 {tokenObjA?.symbol} ≈ {impliedPriceAperB.toFixed(4)}{' '}
             {tokenObjB?.symbol}
+            (${(impliedPriceAperB * marketPriceBInUSD).toFixed(2)})
           </p>
         </div>
       </div>
@@ -71,7 +72,8 @@ export default function Step3Review({
             <span className="text-white font-bold">{tokenObjA?.symbol}</span>
           </div>
           <span className="text-white/80 font-medium">
-            ${(amountA * (marketPriceAInUSD ?? 0)).toFixed(2)}
+            {amountA.toFixed(4)} {tokenObjA?.symbol} ($
+            {(amountA * (marketPriceAInUSD ?? 0)).toFixed(2)})
           </span>
         </div>
 
@@ -82,7 +84,8 @@ export default function Step3Review({
             <span className="text-white font-bold">{tokenObjB?.symbol}</span>
           </div>
           <span className="text-white/80 font-medium">
-            ${(amountB * (marketPriceBInUSD ?? 0)).toFixed(2)}
+            {amountB.toFixed(4)} {tokenObjB?.symbol} ($
+            {(amountB * (marketPriceBInUSD ?? 0)).toFixed(2)})
           </span>
         </div>
 

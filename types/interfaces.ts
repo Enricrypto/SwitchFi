@@ -10,15 +10,13 @@ export interface Token {
 }
 
 export interface TokenListState {
-  tokenList: Token[]; // array of all tokens
-  tokenMap: Record<string, Token>; // mapping for quick lookup by address
-  prices: Record<string, number>; // USD prices for each token
-  isLoading: boolean; // loading state for fetching token list
-  error?: string; // error message if fetching fails
-
-  // Actions
-  fetchTokenList: () => Promise<void>; // fetch token metadata
-  fetchPrices: (addresses: string[]) => Promise<void>; // fetch USD prices for selected tokens
+  tokenList: Token[];
+  tokenMap: Record<string, Token>;
+  prices: Record<string, number | undefined>; // <--- allow undefined
+  isLoading: boolean;
+  error?: string;
+  fetchTokenList: () => Promise<void>;
+  fetchPrice: (address: string) => Promise<void>;
 }
 
 export interface Pool {
@@ -143,6 +141,7 @@ export type SwapPreviewResult = {
 export interface TokenSelectorProps {
   token?: Token;
   onSelect: (token: Token) => void;
+  onPriceFetch?: (price: number) => void; // new optional callback
 }
 
 export interface Props extends TokenSelectorProps {
@@ -193,6 +192,8 @@ export type ReviewData = {
   marketPriceBperA?: number;
   marketPriceAInUSD?: number;
   marketPriceBInUSD?: number;
+  tokenAPriceUSD?: number;
+  tokenBPriceUSD?: number;
 };
 
 export interface StepMultistepProps {
@@ -258,11 +259,13 @@ export interface TokenListResponse {
   tokens: CoinGeckoToken[];
 }
 
-export interface CoinGeckoPrice {
-  usd: number;
+interface DexScreenerPair {
+  priceUsd: string; // the price in USD
 }
 
-export type CoinGeckoPriceResponse = Record<string, CoinGeckoPrice>;
+export interface DexScreenerPriceResponse {
+  pairs: DexScreenerPair[];
+}
 
 export interface PoolsState {
   allPools: Pool[];
@@ -277,4 +280,8 @@ export interface PoolsState {
     userAddress: `0x${string}`,
     publicClient: PublicClient
   ) => Promise<void>;
+}
+
+export interface CoinGeckoPriceResponse {
+  [address: string]: { usd: number };
 }

@@ -21,6 +21,7 @@ export default function Step2DepositAmount({
   feeTier,
 }: Step2DepositAmountProps) {
   const tokenList = useTokenListStore((state) => state.tokenList);
+  const prices = useTokenListStore((state) => state.prices);
 
   // Use the passed tokenObj if available; otherwise, lookup in tokenList
   const tokenAData =
@@ -34,16 +35,23 @@ export default function Step2DepositAmount({
     ({ symbol: '', address: '' } as const);
 
   // ------------------ Compute market prices ------------------
+  const marketPriceAInUSD = tokenA ? (prices[tokenA.toLowerCase()] ?? 0) : 0;
+  console.log('Price A in USD:', marketPriceAInUSD);
+  const marketPriceBInUSD = tokenB ? (prices[tokenB.toLowerCase()] ?? 0) : 0;
+  console.log('Price B in USD:', marketPriceBInUSD);
+
+  // 1 tokenA ≈ X tokenB
   const marketPriceAperB = poolReserves
     ? poolReserves.reserveB / poolReserves.reserveA
-    : 1; // use 1 as default for initial price
+    : marketPriceBInUSD > 0 && marketPriceAInUSD > 0
+      ? marketPriceAInUSD / marketPriceBInUSD
+      : 1;
 
   const marketPriceBperA = poolReserves
     ? poolReserves.reserveA / poolReserves.reserveB
-    : 1;
-
-  const marketPriceAInUSD = 1; // optionally compute real USD price
-  const marketPriceBInUSD = 1;
+    : marketPriceAperB > 0
+      ? 1 / marketPriceAperB
+      : 1;
 
   /** ------------------ Bidirectional input updates ------------------ */
   const handleAmountAChange = (val: number) => {
@@ -65,10 +73,18 @@ export default function Step2DepositAmount({
       impliedPriceBperA: amountA / amountB,
       marketPriceAperB,
       marketPriceBperA,
-      marketPriceAInUSD,
-      marketPriceBInUSD,
+      marketPriceAInUSD: marketPriceAInUSD,
+      marketPriceBInUSD: marketPriceBInUSD,
     });
-  }, [amountA, amountB, marketPriceAperB, marketPriceBperA, setReviewData]);
+  }, [
+    amountA,
+    amountB,
+    marketPriceAperB,
+    marketPriceBperA,
+    marketPriceAInUSD,
+    marketPriceBInUSD,
+    setReviewData,
+  ]);
 
   return (
     <div className="w-full max-w-lg mx-auto space-y-6">
@@ -77,7 +93,7 @@ export default function Step2DepositAmount({
         tokenA={tokenAData}
         tokenB={tokenBData}
         feeTier={feeTier}
-        impliedPrice={marketPriceAperB}
+        impliedPrice={marketPriceAperB} // shows 1 tokenA ≈ X tokenB
       />
 
       <div className="p-6 bg-[#2A0040] border border-[#AB37FF33] rounded-2xl shadow-[0_0_40px_#AB37FF33] text-left">
