@@ -17,7 +17,7 @@ import { parseUnits } from 'viem/utils';
 import { ROUTER_ADDRESS as routerAddress, MAX_UINT256 } from '@/constants';
 import { routerABI } from '@/src/abis/routerABI';
 import { ERC20ABI } from '@/src/abis/ERC20ABI';
-import { getMockPrice } from '../../../utils/getMockPrice';
+import { getMockPrice } from '@/utils/getMockPrice';
 import { PoolListContainerProps } from '../../types/interfaces';
 
 const PoolListContainer = ({

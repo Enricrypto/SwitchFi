@@ -10,7 +10,7 @@ import { useReservesForTokens } from '../../hooks/useReservesForTokens';
 import { useSwapPreview } from '../../hooks/useSwapPreview';
 import { useBestPath } from '../../hooks/useBestPath';
 
-import { getMockPrice } from '../../../utils/getMockPrice';
+import { getMockPrice } from '@/utils/getMockPrice';
 
 import TokenSelector from '../shared/inputs/TokenSelector';
 import AmountInput from '../shared/inputs/AmountInput';
