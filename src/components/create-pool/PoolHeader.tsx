@@ -16,7 +16,7 @@ const PoolHeader = ({
   impliedPrice,
 }: PoolHeaderProps) => {
   return (
-    <div className="w-full max-w-lg mx-auto p-6 bg-[#2A0040] border border-[#AB37FF33] rounded-2xl shadow-[0_0_40px_#AB37FF33]">
+    <div className="w-full max-w-lg mx-auto p-6 bg-[#2A0040] border border-[#AB37FF33] rounded-2xl shadow-[0_0_40px_#AB37FF33] flex flex-col items-center text-center">
       {/* Token pair and version */}
       <div className="flex items-center gap-2 font-bold text-xl">
         <TokenIcon address={tokenA.address} size={24} />
