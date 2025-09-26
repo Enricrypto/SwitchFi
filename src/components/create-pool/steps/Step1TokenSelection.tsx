@@ -96,6 +96,7 @@ export default function Step1TokenSelection({
       {/* Dynamic Button */}
       <button
         onClick={onNext}
+        disabled={!(tokenA && tokenB && feeTier)}
         className="mt-6 w-full py-3 px-6 bg-purple-600 hover:bg-purple-700 rounded-full text-white font-bold text-lg transition-all duration-200 shadow-[0_0_20px_#AB37FF88]"
       >
         {buttonText}

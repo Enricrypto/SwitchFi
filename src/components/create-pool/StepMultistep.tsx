@@ -5,6 +5,7 @@ import { StepMultistepProps } from '@/src/types/interfaces';
 import Step1TokenSelection from '@/src/components/create-pool/steps/Step1TokenSelection';
 import Step2DepositAmount from '@/src/components/create-pool/steps/Step2DepositAmount';
 import Step3Review from '@/src/components/create-pool/steps/Step3Review';
+import Step4ApproveAndCreatePool from '@/src/components/create-pool/steps/Step4ApproveAndCreatePool';
 
 export default function StepMultistep({
   step,
@@ -19,7 +20,7 @@ export default function StepMultistep({
   amountB,
   setAmounts,
   pool,
-  // poolExists,
+  poolExists,
   // isPending,
   // isConfirming,
   // hash,
@@ -47,16 +48,16 @@ export default function StepMultistep({
           setTokenA={setTokenA}
           setTokenB={setTokenB}
           setFeeTier={setFeeTier}
+          poolExists={poolExists}
           onNext={handleNext}
         />
       )}
-
       {step === 2 && (
         <Step2DepositAmount
           tokenA={tokenA ?? ''}
           tokenB={tokenB ?? ''}
-          tokenObjA={tokenObjA} // pass the resolved object
-          tokenObjB={tokenObjB} // pass the resolved object
+          tokenObjA={tokenObjA}
+          tokenObjB={tokenObjB}
           amountA={amountA}
           amountB={amountB}
           setAmounts={setAmounts}
@@ -74,15 +75,31 @@ export default function StepMultistep({
           feeTier={feeTier!}
         />
       )}
-
       {step === 3 && (
         <Step3Review
           tokenA={tokenA}
           tokenB={tokenB}
           amountA={amountA}
           amountB={amountB}
+          tokenObjA={tokenObjA}
+          tokenObjB={tokenObjB}
           reviewData={reviewData} // <-- pass the whole object
           onConfirm={handleNext}
+          onBack={handleBack}
+        />
+      )}
+
+      {step === 4 && (
+        <Step4ApproveAndCreatePool
+          tokenA={tokenA!}
+          tokenB={tokenB!}
+          amountA={amountA}
+          amountB={amountB}
+          tokenObjA={tokenObjA}
+          tokenObjB={tokenObjB}
+          decimalsA={tokenObjA.decimals}
+          decimalsB={tokenObjB.decimals}
+          pairAddress={pool?.pairAddress}
           onBack={handleBack}
         />
       )}

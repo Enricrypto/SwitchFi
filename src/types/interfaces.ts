@@ -184,6 +184,7 @@ export interface Step1Props {
   setTokenB: (token: string) => void;
   setFeeTier: (fee: number) => void;
   onNext: () => void;
+  poolExists?: boolean;
 }
 
 export type ReviewData = {
@@ -244,6 +245,8 @@ export interface Step3ReviewProps {
   reviewData: ReviewData; // <-- all computed numbers here
   onConfirm: () => void;
   onBack: () => void;
+  tokenObjA?: Token;
+  tokenObjB?: Token;
 }
 
 interface CoinGeckoToken {
@@ -285,4 +288,17 @@ export interface PoolsState {
 
 export interface CoinGeckoPriceResponse {
   [address: string]: { usd: number };
+}
+
+export interface Step4ApproveCreateProps {
+  tokenA: string; // `0x...`
+  tokenB: string; // `0x...`
+  amountA: number;
+  amountB: number;
+  decimalsA: number;
+  decimalsB: number;
+  pairAddress?: string; // undefined if pair not created yet
+  onBack: () => void;
+  tokenObjA?: Token;
+  tokenObjB?: Token;
 }

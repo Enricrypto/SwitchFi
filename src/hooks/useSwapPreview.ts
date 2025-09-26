@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { getAmountOut, getAmountIn } from '../utils/swap';
+import { getAmountOut, getAmountIn } from '@/utils/swap';
 import { SwapPreviewParams } from '../types/interfaces';
 
 export function useSwapPreview(params: SwapPreviewParams) {

@@ -26,7 +26,7 @@ const CreatePoolPage = () => {
   /** ------------------ Step 1 State (tokens, fee & amounts) ------------------ */
   const [tokenA, setTokenA] = useState<string | null>(null);
   const [tokenB, setTokenB] = useState<string | null>(null);
-  const [feeTier, setFeeTier] = useState<number | null>(0.25);
+  const [feeTier, setFeeTier] = useState<number | null>(null);
   const [amountA, setAmountA] = useState<number>(0);
   const [amountB, setAmountB] = useState<number>(0);
 

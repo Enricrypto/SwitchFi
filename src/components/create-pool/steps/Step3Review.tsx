@@ -2,7 +2,6 @@
 
 import { Step3ReviewProps } from '@/src/types/interfaces';
 import TokenIcon from '@/src/components/shared/icons/TokenIcon';
-import { useTokenListStore } from '@/store/useTokenListStore';
 
 export default function Step3Review({
   tokenA,
@@ -12,12 +11,9 @@ export default function Step3Review({
   reviewData,
   onBack,
   onConfirm,
+  tokenObjA,
+  tokenObjB,
 }: Step3ReviewProps) {
-  const tokenMap = useTokenListStore((state) => state.tokenMap);
-
-  const tokenObjA = tokenA ? tokenMap[tokenA.toLowerCase()] : undefined;
-  const tokenObjB = tokenB ? tokenMap[tokenB.toLowerCase()] : undefined;
-
   const {
     impliedPriceAperB = 0,
     marketPriceAperB = 1,
