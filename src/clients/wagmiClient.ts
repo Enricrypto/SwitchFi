@@ -1,5 +1,4 @@
 import { arbitrum } from 'wagmi/chains';
-// import { defineChain } from 'viem';
 import { injected } from '@wagmi/connectors';
 import { createConfig } from 'wagmi';
 import { http } from 'viem';
@@ -13,7 +12,7 @@ export const config = createConfig({
   connectors,
   transports: {
     [arbitrum.id]: http(
-      'https://arb-mainnet.g.alchemy.com/v2/ADLPIIv6SUjhmaoJYxWLHKDUDaw8RnRj'
+      `https://arb-mainnet.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_API_KEY!}`
     ),
   },
 });

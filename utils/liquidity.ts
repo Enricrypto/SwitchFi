@@ -1,5 +1,6 @@
 import { calculateOptimalAmounts } from './liquidityCalculations';
-import { ERC20Abi, MAX_UINT256 } from '@/constants';
+import { MAX_UINT256 } from '@/constants';
+import { ERC20ABI as ERC20Abi } from '@/abis/ERC20ABI';
 
 // Type for contract write function, returns transaction hash.
 type WriteContractAsync = (params: {
